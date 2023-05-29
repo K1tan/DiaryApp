@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="moodId_awful">1</integer>
+    <integer name="moodId_bad">2</integer>
+    <integer name="moodId_normal">3</integer>
+    <integer name="moodId_good">4</integer>
+    <integer name="moodId_super">5</integer>
+</resources>
