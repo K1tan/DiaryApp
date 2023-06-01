@@ -19,4 +19,11 @@ class NoteViewModel : ViewModel() {
             _notes.value = notes
         }
     }
+    fun deleteNoteById(db: MainDb, id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            db.getDao().deleteById(id)
+            val updatedNotes = _notes.value.filter { it.id != id }
+            _notes.value = updatedNotes
+        }
+    }
 }

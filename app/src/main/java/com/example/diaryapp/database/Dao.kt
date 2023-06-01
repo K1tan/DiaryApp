@@ -19,4 +19,7 @@ interface Dao {
 
     @Query("SELECT * FROM tasks")
     fun getAllTasks(): List<TaskDb>
+
+    @Query("DELETE FROM notes WHERE id = :id")
+    suspend fun deleteById(id: Int)
 }

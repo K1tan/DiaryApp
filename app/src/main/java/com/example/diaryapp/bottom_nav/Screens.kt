@@ -1,5 +1,6 @@
 package com.example.diaryapp.bottom_nav
 
+import android.app.DatePickerDialog
 import kotlinx.coroutines.*
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,11 +20,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -40,9 +50,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -61,6 +73,7 @@ import com.example.diaryapp.database.MainDb
 import com.example.diaryapp.database.NoteDb
 import com.example.diaryapp.database.TaskDb
 import com.example.diaryapp.date.DateInRussianFormat
+import com.example.diaryapp.other.ShowDateTimePicker
 import com.example.diaryapp.ui.theme.AwfulMoodColor
 import com.example.diaryapp.ui.theme.BackGroundColor
 import com.example.diaryapp.ui.theme.BadMoodColor
@@ -69,6 +82,8 @@ import com.example.diaryapp.ui.theme.GoodMoodColor
 import com.example.diaryapp.ui.theme.GreenSoft
 import com.example.diaryapp.ui.theme.NormalMoodColor
 import com.example.diaryapp.ui.theme.SuperMoodColor
+import java.util.Calendar
+import java.util.Date
 
 
 lateinit var noteTitle: MutableState<String>
@@ -133,6 +148,41 @@ fun DiaryScreen() {
                 } else {
                     items(dbNotes) { note ->
                         Box() {
+                            var showConfirmationDialog by remember { mutableStateOf(false) }
+                            var expanded by remember { mutableStateOf(false) }
+                            if (showConfirmationDialog) {
+                                AlertDialog(
+                                    modifier = Modifier.background(Color.Gray),
+                                    onDismissRequest = { showConfirmationDialog = false },
+                                    title = { Text(text = "Подтвердите действие", color = Color.White) },
+                                    text = { Text(text = "Вы уверены, что хотите безвозвратно удалить запись?", color = Color.White) },
+                                    confirmButton = {
+                                        Button(
+                                            onClick = {
+                                                note.id?.let {
+                                                    noteViewModel.deleteNoteById(db,
+                                                        it
+                                                    )
+                                                }
+                                                showConfirmationDialog = false
+                                            },
+                                            colors = ButtonDefaults.buttonColors(GreenSoft)
+                                        ) {
+                                            Text(text = "Удалить", color = Color.Red)
+                                        }
+                                    },
+                                    dismissButton = {
+                                        Button(
+                                            onClick = { showConfirmationDialog = false },
+                                            colors = ButtonDefaults.buttonColors(GreenSoft)
+                                        ) {
+                                            Text(text = "Отмена", color = Color.Black)
+                                        }
+                                    },
+                                    backgroundColor = CardBackGroundColor,
+                                    shape = RoundedCornerShape(40.dp)
+                                )
+                            }
                             Card(
                                 modifier = Modifier
                                     .padding(16.dp)
@@ -178,7 +228,10 @@ fun DiaryScreen() {
                                             R.drawable.ic_normal -> {
                                                 Box(modifier = Modifier
                                                     .size(64.dp)
-                                                    .background(NormalMoodColor, shape = CircleShape)) {
+                                                    .background(
+                                                        NormalMoodColor,
+                                                        shape = CircleShape
+                                                    )) {
                                                     Image(
                                                         painterResource(id = R.drawable.ic_normal),
                                                         contentDescription = "ic_normal",
@@ -222,20 +275,55 @@ fun DiaryScreen() {
                                             }
                                         }
 
-                                        Column() {
-                                            Text(
-                                                modifier = Modifier.fillMaxWidth(0.5f),
-                                                text = "${DateInRussianFormat(date = note.noteDate)}",
-                                                fontSize = 20.sp,
-                                                color = Color.White
-                                            )
-                                            Text(
-                                                modifier = Modifier.fillMaxWidth(0.5f),
-                                                text = note.noteActivity,
-                                                fontSize = 20.sp,
-                                                color = Color.White
-                                            )
+                                        Row() {
+                                            Column() {
+                                                Text(
+                                                    //modifier = Modifier.fillMaxWidth(),
+                                                    text = "${DateInRussianFormat(date = note.noteDate)}",
+                                                    fontSize = 20.sp,
+                                                    color = Color.White
+                                                )
+                                                Text(
+                                                    //modifier = Modifier.fillMaxWidth(0.5f),
+                                                    text = note.noteActivity,
+                                                    fontSize = 20.sp,
+                                                    color = Color.White
+                                                )
+                                            }
+                                            Box{            //меню редактировать/удалить
+                                                IconButton(onClick = { expanded = true }) {
+                                                    Icon(Icons.Default.MoreVert, contentDescription = "Показать меню")
+                                                }
+                                                DropdownMenu(
+                                                    expanded = expanded,
+                                                    onDismissRequest = { expanded = false },
+                                                    modifier = Modifier.wrapContentWidth().align(Alignment.Center)
+                                                ) {
+                                                    DropdownMenuItem(onClick = {
+
+                                                        expanded = false
+                                                    }) {
+                                                        Text(text = "Редактировать ${note.id}")
+                                                    }
+                                                    DropdownMenuItem(onClick = {
+                                                        /*
+                                                        note.id?.let {
+                                                            noteViewModel.deleteNoteById(db,
+                                                                it
+                                                            )
+                                                        }
+                                                        **/
+                                                        showConfirmationDialog = true
+
+                                                        expanded = false
+
+                                                    }) {
+                                                        Text(text = "Удалить", color = Color.Red)
+                                                    }
+                                                }
+                                            }
                                         }
+
                                     }
                                     if (note.noteTitle.filter { !it.isWhitespace() } != "") {
                                         Text(
@@ -501,8 +589,10 @@ fun AddNoteScreen(navController: NavHostController, noteStructure: NoteStructure
             Button(onClick = {
                 if (noteStructure.noteText.filter { !it.isWhitespace() } != "") {
 
-                    //noteStructure.noteMood=selectedImageId.value
-
+                    navController.navigate("screen_diary") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                     val note = NoteDb(
                         null,
                         noteStructure.noteTitle,
@@ -514,10 +604,7 @@ fun AddNoteScreen(navController: NavHostController, noteStructure: NoteStructure
                     Thread {
                         db.getDao().insertNote(note)
                     }.start()
-                    navController.navigate("screen_diary") {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+
 
                     noteStructure.noteTitle = ""
                     noteStructure.noteText = ""
@@ -822,6 +909,44 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
 
                 colors = TextFieldDefaults.textFieldColors(textColor = Color.White)
             )
+        }
+        Column {
+            val context = LocalContext.current
+
+            val calendar = Calendar.getInstance()
+            calendar.time= Date()
+
+            var nowDay:Int = calendar.get(Calendar.DAY_OF_MONTH)
+            var nowMonth:Int = calendar.get(Calendar.MONTH)
+            var nowYear:Int = calendar.get(Calendar.YEAR)
+            val date = remember {
+                mutableStateOf("$nowDay/${nowMonth+1}/$nowYear")
+            }
+            val datePickerDialog = remember {
+                val dialog=DatePickerDialog(
+                    context,
+                    DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
+                        date.value = "$dayOfMonth/${month+1}/$year"
+                        calendar.set(year,month,dayOfMonth)
+                        taskStructure.taskDate = calendar.time
+                    },
+                    nowYear,
+                    nowMonth,
+                    nowDay
+                )
+                dialog.datePicker.minDate=Date().time
+                dialog
+            }
+            Text(text = "Выбранная дата: ${date.value}")
+            Spacer(modifier = Modifier.size(16.dp))
+            Button(onClick = {
+                datePickerDialog.show()
+
+
+            }) {
+                Text(text = "Выбрать дату")
+            }
+
         }
 
 
