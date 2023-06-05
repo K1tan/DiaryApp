@@ -19,7 +19,7 @@ fun NavGraph(navHostController: NavHostController) {
 
     NavHost(navController = navHostController, startDestination = "screen_diary"){
         composable("screen_diary"){
-            DiaryScreen()
+            DiaryScreen(navController = navHostController)
         }
         composable("screen_stat"){
             StatScreen()
@@ -38,6 +38,10 @@ fun NavGraph(navHostController: NavHostController) {
         }
         composable("screen_addDataNote"){
             AddNoteDataScreen(navController = navHostController, noteStructure)
+        }
+        composable("screen_editDataNote/{noteId}") { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getString("noteId")?.toIntOrNull()
+            EditNoteDataScreen(navController = navHostController, noteStructure, noteId)
         }
         composable("screen_addDataTask"){
             AddTaskDataScreen(navController = navHostController, taskStructure)

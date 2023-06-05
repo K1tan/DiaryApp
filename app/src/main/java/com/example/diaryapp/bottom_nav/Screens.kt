@@ -1,7 +1,9 @@
 package com.example.diaryapp.bottom_nav
 
+
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import android.app.DatePickerDialog
-import kotlinx.coroutines.*
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
@@ -27,6 +29,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.Divider
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
@@ -60,10 +63,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.diaryapp.ContextProvider
-
 import com.example.diaryapp.NoteStructure
 import com.example.diaryapp.NoteViewModel
 import com.example.diaryapp.R
@@ -73,7 +76,6 @@ import com.example.diaryapp.database.MainDb
 import com.example.diaryapp.database.NoteDb
 import com.example.diaryapp.database.TaskDb
 import com.example.diaryapp.date.DateInRussianFormat
-import com.example.diaryapp.other.ShowDateTimePicker
 import com.example.diaryapp.ui.theme.AwfulMoodColor
 import com.example.diaryapp.ui.theme.BackGroundColor
 import com.example.diaryapp.ui.theme.BadMoodColor
@@ -82,6 +84,7 @@ import com.example.diaryapp.ui.theme.GoodMoodColor
 import com.example.diaryapp.ui.theme.GreenSoft
 import com.example.diaryapp.ui.theme.NormalMoodColor
 import com.example.diaryapp.ui.theme.SuperMoodColor
+import kotlinx.coroutines.*
 import java.util.Calendar
 import java.util.Date
 
@@ -94,7 +97,7 @@ val db = MainDb.getDb(ContextProvider.getContext())
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiaryScreen() {
+fun DiaryScreen(navController: NavHostController) {
     var filterText = remember {
         mutableStateOf("")
     }
@@ -150,9 +153,10 @@ fun DiaryScreen() {
                         Box() {
                             var showConfirmationDialog by remember { mutableStateOf(false) }
                             var expanded by remember { mutableStateOf(false) }
+                            //подвердить удаление:
                             if (showConfirmationDialog) {
                                 AlertDialog(
-                                    modifier = Modifier.background(Color.Gray),
+                                    modifier = Modifier.background(Color.Transparent),
                                     onDismissRequest = { showConfirmationDialog = false },
                                     title = { Text(text = "Подтвердите действие", color = Color.White) },
                                     text = { Text(text = "Вы уверены, что хотите безвозвратно удалить запись?", color = Color.White) },
@@ -180,7 +184,7 @@ fun DiaryScreen() {
                                         }
                                     },
                                     backgroundColor = CardBackGroundColor,
-                                    shape = RoundedCornerShape(40.dp)
+                                    shape = RoundedCornerShape(10.dp)
                                 )
                             }
                             Card(
@@ -297,14 +301,24 @@ fun DiaryScreen() {
                                                 DropdownMenu(
                                                     expanded = expanded,
                                                     onDismissRequest = { expanded = false },
-                                                    modifier = Modifier.wrapContentWidth().align(Alignment.Center)
+                                                    modifier = Modifier
+                                                        .wrapContentWidth()
+                                                        .align(Alignment.Center)
                                                 ) {
                                                     DropdownMenuItem(onClick = {
+                                                        var noteId = note.id ?: -1
 
                                                         expanded = false
+                                                        navController.navigate(
+                                                            route = "screen_editDataNote/$noteId",
+                                                            builder = {
+                                                                launchSingleTop = true
+                                                                restoreState = true
+                                                            })
                                                     }) {
-                                                        Text(text = "Редактировать ${note.id}")
+                                                        Text(text = "Редактировать")
                                                     }
+                                                    Divider()
                                                     DropdownMenuItem(onClick = {
                                                         /*
                                                         note.id?.let {
@@ -327,7 +341,7 @@ fun DiaryScreen() {
                                     }
                                     if (note.noteTitle.filter { !it.isWhitespace() } != "") {
                                         Text(
-                                            modifier = Modifier.fillMaxWidth(0.5f),
+                                            modifier = Modifier.fillMaxWidth(1f),
                                             text = note.noteTitle,
                                             fontSize = 30.sp,
                                             color = Color.White
@@ -767,6 +781,7 @@ fun SettingsScreen() {
 @Composable
 fun AddNoteDataScreen(navController: NavHostController, noteStructure: NoteStructure) {
     Column() {
+
         Row(
             modifier = Modifier
                 .background(BackGroundColor)
@@ -952,4 +967,103 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
 
     }
 
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditNoteDataScreen(navController: NavHostController, noteStructure: NoteStructure, noteId: Int?){
+    val noteViewModel: NoteViewModel = viewModel()
+    val dbNote by noteViewModel.note.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (noteId != null) {
+            noteViewModel.getNoteById(db,noteId)
+        }
+    }
+    LaunchedEffect(dbNote){
+        dbNote?.let { note->
+
+            noteStructure.noteTitle = note.noteTitle
+            noteStructure.noteText = note.noteText
+        }
+    }
+    Column() {
+        Row(
+            modifier = Modifier
+                .background(BackGroundColor)
+                .fillMaxWidth()
+                .padding(top = 15.dp), horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(modifier = Modifier.padding(start = 20.dp)) {
+                TextField(
+                    value = noteStructure.noteTitle, onValueChange = {
+                        noteStructure.noteTitle = it
+                    },
+                    label = {
+                        Text(
+                            text = "Введите заголовок",
+                        )
+                    }, modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .background(CardBackGroundColor),
+                    shape = RoundedCornerShape(7.dp),
+                    colors = TextFieldDefaults.textFieldColors(textColor = Color.White)
+                )
+
+            }
+            Image(
+                painterResource(id = R.drawable.ic_submit), modifier = Modifier
+                    .size(64.dp)
+                    .fillMaxWidth(0.3f)
+                    .clickable {
+                        if (noteStructure.noteText.filter { !it.isWhitespace() } != "") {
+                            dbNote?.let { note ->
+                                val updatedNote = note.copy(
+                                    noteText = noteStructure.noteText,
+                                    noteTitle = noteStructure.noteTitle
+                                )
+                                noteViewModel.viewModelScope.launch {
+                                    noteViewModel.updateNote(db, updatedNote)
+                                }
+
+                            }
+                            navController.navigate("screen_diary") {
+                                launchSingleTop = true
+                                restoreState = true
+
+                            }
+                            noteStructure.noteTitle = ""
+                            noteStructure.noteText = ""
+                        }
+                        else Toast.makeText(
+                            ContextProvider.getContext(),
+                            "Пожалуйста введите текст заметки.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                    }, contentDescription = "submitImage"
+            )
+
+        }
+        TextField(
+            value = noteStructure.noteText,
+            onValueChange = {
+                noteStructure.noteText = it
+
+            },
+            label = {
+                Text(
+                    text = "Введите текст",
+                )
+            }, modifier = Modifier
+                .fillMaxWidth(1f)
+                .fillMaxHeight()
+                .background(CardBackGroundColor)
+                .padding(15.dp),
+
+            colors = TextFieldDefaults.textFieldColors(textColor = Color.White)
+        )
+
+    }
 }
