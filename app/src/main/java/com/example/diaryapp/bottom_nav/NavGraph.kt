@@ -1,5 +1,7 @@
 package com.example.diaryapp.bottom_nav
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
@@ -7,7 +9,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.diaryapp.NoteStructure
 import com.example.diaryapp.TaskStructure
+import com.example.diaryapp.screens.AddActivity
+import com.example.diaryapp.screens.AddNoteDataScreen
+import com.example.diaryapp.screens.AddNoteScreen
+import com.example.diaryapp.screens.AddTaskDataScreen
+import com.example.diaryapp.screens.AddTaskScreen
+import com.example.diaryapp.screens.CalendarScreen
+import com.example.diaryapp.screens.DiaryScreen
+import com.example.diaryapp.screens.EditNoteDataScreen
+import com.example.diaryapp.screens.SettingsScreen
+import com.example.diaryapp.screens.StatScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavGraph(navHostController: NavHostController) {
     val noteStructure = remember {
@@ -45,6 +58,9 @@ fun NavGraph(navHostController: NavHostController) {
         }
         composable("screen_addDataTask"){
             AddTaskDataScreen(navController = navHostController, taskStructure)
+        }
+        composable("screen_addActivity"){
+            AddActivity(navController = navHostController)
         }
 
     }

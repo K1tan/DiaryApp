@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 2,
-    "identityHash": "ba384a6fd272ebc3575b676b5875f42c",
+    "version": 3,
+    "identityHash": "d3a6a7cb1468492af6a2bc5b7e11dfca",
     "entities": [
       {
         "tableName": "notes",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `noteTitle` TEXT NOT NULL, `noteText` TEXT NOT NULL, `noteMood` INTEGER NOT NULL, `noteDate` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `noteTitle` TEXT NOT NULL, `noteText` TEXT NOT NULL, `noteMood` INTEGER NOT NULL, `noteDate` INTEGER NOT NULL, `activityIds` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -36,6 +36,12 @@
             "fieldPath": "noteDate",
             "columnName": "noteDate",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activityIds",
+            "columnName": "activityIds",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -88,13 +94,13 @@
       },
       {
         "tableName": "activities",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "name",
@@ -111,39 +117,12 @@
         },
         "indices": [],
         "foreignKeys": []
-      },
-      {
-        "tableName": "note_activity_join",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`noteId` INTEGER NOT NULL, `activityId` INTEGER NOT NULL, PRIMARY KEY(`noteId`, `activityId`))",
-        "fields": [
-          {
-            "fieldPath": "noteId",
-            "columnName": "noteId",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "activityId",
-            "columnName": "activityId",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "noteId",
-            "activityId"
-          ]
-        },
-        "indices": [],
-        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ba384a6fd272ebc3575b676b5875f42c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd3a6a7cb1468492af6a2bc5b7e11dfca')"
     ]
   }
 }

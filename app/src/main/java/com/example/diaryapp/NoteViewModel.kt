@@ -1,20 +1,19 @@
 package com.example.diaryapp
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.diaryapp.bottom_nav.db
+import com.example.diaryapp.database.ActivitiesDb
+import com.example.diaryapp.screens.db
 import com.example.diaryapp.database.MainDb
 import com.example.diaryapp.database.NoteDb
 import com.example.diaryapp.date.convertToDayStartEnd
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 class NoteViewModel : ViewModel() {
     private val _notes = MutableStateFlow(emptyList<NoteDb>())
@@ -26,6 +25,9 @@ class NoteViewModel : ViewModel() {
     private val _note = MutableStateFlow<NoteDb?>(null)
     val note: StateFlow<NoteDb?> = _note
 
+    private val _activities = MutableStateFlow<List<ActivitiesDb>>(emptyList())
+    val activities: StateFlow<List<ActivitiesDb>> = _activities
+
     fun getAllNotes(db: MainDb) {
         viewModelScope.launch(Dispatchers.IO) {
             val notes = db.getDao().getAllNotes()
@@ -33,41 +35,32 @@ class NoteViewModel : ViewModel() {
             _filteredNotes.value = notes
         }
     }
-
-    /*
-    fun searchNotes(db: MainDb, searchQuery: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val notes = db.getDao().searchNotes(searchQuery)
-            _filteredNotes.value = notes
-        }
-    }
-    * */
     fun searchNotes(searchQuery: String, selectedDate: Date?) {
         viewModelScope.launch(Dispatchers.IO) {
             val notes = if (selectedDate != null) {
                 if (searchQuery.isNotBlank()) {
                     val (dayStart, dayEnd) = convertToDayStartEnd(selectedDate)
-                    Log.d("MyTag","дата и текст введены: $dayStart $dayEnd")
+                    //Log.d("MyTag","дата и текст введены: $dayStart $dayEnd")
                     db.getDao().searchNotesByDateAndText(dayStart, dayEnd, searchQuery)
 
                 } else {
                     val (dayStart, dayEnd) = convertToDayStartEnd(selectedDate)
-                    Log.d("MyTag","дата введена $dayStart $dayEnd")
+                    //Log.d("MyTag","дата введена $dayStart $dayEnd")
                     db.getDao().getNotesByDate(dayStart, dayEnd)
 
                 }
             } else {
                 if (searchQuery.isNotBlank()) {
-                    Log.d("MyTag","текст введен")
+                    //Log.d("MyTag","текст введен")
                     db.getDao().searchNotesByText(searchQuery)
                 } else {
-                    Log.d("MyTag","ничего не введено")
+                    //Log.d("MyTag","ничего не введено")
                     db.getDao().getAllNotes()
                 }
             }
 
             _filteredNotes.value = notes
-            Log.d("MyTag","$notes")
+            //Log.d("MyTag","$notes")
 
         }
     }
@@ -92,5 +85,20 @@ class NoteViewModel : ViewModel() {
             db.getDao().update(note)
         }
     }
+    fun loadActivities() {
+        viewModelScope.launch {
 
+            val activitiesList = db.getDao().getAllActivities()
+            _activities.value = activitiesList
+
+        }
+    }
+    fun deleteActivity(activity: ActivitiesDb) {
+        viewModelScope.launch (Dispatchers.IO){
+            db.getDao().deleteActivity(activity)
+            val updatedActivities = _activities.value.toMutableList()
+            updatedActivities.remove(activity)
+            _activities.value = updatedActivities
+        }
+    }
 }
