@@ -1,10 +1,12 @@
 package com.example.diaryapp.screens
 
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.app.DatePickerDialog
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -53,10 +55,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.test.core.app.ActivityScenario.launch
 import com.example.diaryapp.ContextProvider
 import com.example.diaryapp.NoteViewModel
 import com.example.diaryapp.R
+import com.example.diaryapp.database.ActivitiesDb
 import com.example.diaryapp.database.MainDb
+import com.example.diaryapp.database.NoteDb
 import com.example.diaryapp.date.DateInRussianFormat
 import com.example.diaryapp.ui.theme.AwfulMoodColor
 import com.example.diaryapp.ui.theme.BackGroundColor
@@ -66,6 +71,7 @@ import com.example.diaryapp.ui.theme.GoodMoodColor
 import com.example.diaryapp.ui.theme.GreenSoft
 import com.example.diaryapp.ui.theme.NormalMoodColor
 import com.example.diaryapp.ui.theme.SuperMoodColor
+import com.google.gson.Gson
 import kotlinx.coroutines.*
 import java.util.Calendar
 import java.util.Date
@@ -77,6 +83,7 @@ lateinit var noteText: MutableState<String>
 
 val db = MainDb.getDb(ContextProvider.getContext())
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +94,8 @@ fun DiaryScreen(navController: NavHostController) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf<Date?>(null) }
     val filteredNotes by noteViewModel.filteredNotes.collectAsState()
+
+
 
 
 
@@ -347,7 +356,7 @@ fun DiaryScreen(navController: NavHostController) {
                                                         .align(Alignment.Center)
                                                 ) {
                                                     DropdownMenuItem(onClick = {
-                                                        var noteId = note.id ?: -1
+                                                        val noteId = note.id ?: -1
 
                                                         expanded = false
                                                         navController.navigate(

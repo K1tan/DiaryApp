@@ -1,5 +1,6 @@
 package com.example.diaryapp.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,12 +54,25 @@ import com.example.diaryapp.ui.theme.GreenSoft
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddActivity(navController: NavHostController) {
+
+
     var showConfirmationDialog by remember { mutableStateOf(false) }
     var activityName by remember{mutableStateOf("")}
     val noteViewModel: NoteViewModel = viewModel()
     val activities by noteViewModel.activities.collectAsState()
+    val deleteBtnClicked = remember {
+        mutableStateOf(false)
+    }
+    val dbNotes by noteViewModel.notes.collectAsState()
+    lateinit var activityToDelete: ActivitiesDb
 
-
+    LaunchedEffect(Unit){
+        noteViewModel.getAllNotes(db)
+    }
+    LaunchedEffect(deleteBtnClicked.value) {
+        noteViewModel.removeNonExistentActivitiesFromNotes(dbNotes)
+        deleteBtnClicked.value=false
+    }
     LaunchedEffect(Unit) {
         noteViewModel.loadActivities()
     }
@@ -123,62 +137,65 @@ fun AddActivity(navController: NavHostController) {
             )
         }
 
-        Box(contentAlignment = Alignment.Center) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(bottom = 50.dp)) {
             LazyColumn {
                 items(activities.size) { index ->
-                    if (showConfirmationDialog) {
-                        AlertDialog(
-                            modifier = Modifier.background(Color.Transparent),
-                            onDismissRequest = { showConfirmationDialog = false },
-                            title = {
-                                Text(
-                                    text = "Удалить занятие?",
-                                    color = Color.White
-                                )
-                            },
-                            text = {
-                                Text(
-                                    text = "Вы уверены, что хотите безвозвратно удалить занятие? Занятие также удалится из всех ваших записей.",
-                                    color = Color.White
-                                )
-                            },
-                            confirmButton = {
-                                Button(
-                                    onClick = {
-                                        noteViewModel.deleteActivity(activities[index])
-                                        showConfirmationDialog = false
-                                    },
-                                    colors = ButtonDefaults.buttonColors(GreenSoft)
-                                ) {
-                                    Text(text = "Удалить", color = Color.Red)
+                    Box(){
+                        if (showConfirmationDialog) {
+                            AlertDialog(
+                                modifier = Modifier.background(Color.Transparent),
+                                onDismissRequest = { showConfirmationDialog = false },
+                                title = {
+                                    Text(
+                                        text = "Удалить занятие?",
+                                        color = Color.White
+                                    )
+                                },
+                                text = {
+                                    Text(
+                                        text = "Вы уверены, что хотите безвозвратно удалить занятие? Оно также удалится со всех ваших записей.",
+                                        color = Color.White
+                                    )
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            noteViewModel.deleteActivity(activityToDelete)
+                                            showConfirmationDialog = false
+                                            deleteBtnClicked.value = true
+                                        },
+                                        colors = ButtonDefaults.buttonColors(GreenSoft)
+                                    ) {
+                                        Text(text = "Удалить", color = Color.Red)
+                                    }
+                                },
+                                dismissButton = {
+                                    Button(
+                                        onClick = { showConfirmationDialog = false },
+                                        colors = ButtonDefaults.buttonColors(GreenSoft)
+                                    ) {
+                                        Text(text = "Отмена", color = Color.Black)
+                                    }
+                                },
+                                backgroundColor = CardBackGroundColor,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                        }
+                        Card(
+                            modifier= Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            shape = RoundedCornerShape(10.dp)) {
+                            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier= Modifier
+                                .fillMaxWidth()
+                                .padding(15.dp)) {
+                                Text(text = activities[index].name, color = Color.White, fontSize = 20.sp)
+                                IconButton(onClick = {
+                                    activityToDelete= activities[index]
+                                    showConfirmationDialog = true
+                                }) {
+                                    Image(painterResource(id = R.drawable.ic_delete), contentDescription = "Удалить активность")
                                 }
-                            },
-                            dismissButton = {
-                                Button(
-                                    onClick = { showConfirmationDialog = false },
-                                    colors = ButtonDefaults.buttonColors(GreenSoft)
-                                ) {
-                                    Text(text = "Отмена", color = Color.Black)
-                                }
-                            },
-                            backgroundColor = CardBackGroundColor,
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                    }
-                    Card(
-                        modifier= Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        shape = RoundedCornerShape(10.dp)) {
-                        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier= Modifier
-                            .fillMaxWidth()
-                            .padding(15.dp)) {
-                            Text(text = activities[index].name, color = Color.White, fontSize = 20.sp)
-                            IconButton(onClick = {
-
-                                showConfirmationDialog = true
-                            }) {
-                                Image(painterResource(id = R.drawable.ic_delete), contentDescription = "Удалить активность")
                             }
                         }
                     }

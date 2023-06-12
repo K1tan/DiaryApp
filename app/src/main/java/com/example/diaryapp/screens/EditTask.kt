@@ -5,6 +5,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.hardware.camera2.params.BlackLevelPattern
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,6 +43,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,8 +56,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.diaryapp.ContextProvider
 import com.example.diaryapp.R
 import com.example.diaryapp.TaskStructure
 import com.example.diaryapp.TaskViewModel
@@ -70,43 +75,48 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-enum class RepeatOption(val title: String) {
-    NEVER("Никогда"),
-    DAILY("Ежедневно"),
-    WEEKLY("Еженедельно"),
-    MONTHLY("Ежемесячно"),
-    ANNUALLY("Ежегодно")
-}
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStructure) {
+fun EditTaskScreen(
+    navController: NavHostController,
+    taskStructure: TaskStructure,
+    taskId: Int?
+) {
+    var showConfirmationDialog by remember { mutableStateOf(false) }
     val taskViewModel: TaskViewModel = viewModel()
-    var checkboxes:MutableList<Boolean> = remember {
-        mutableStateListOf()
-    }
-    var checkboxesText:MutableList<String> = remember {
-        mutableStateListOf()
-    }
+    val dbTask by taskViewModel.task.collectAsState()
     val newCheckboxes = mutableListOf<Boolean>()
     val newCheckboxesText = mutableListOf<String>()
+    val checkboxes: MutableList<Boolean> = remember {
+        mutableStateListOf()
+    }
+    val checkboxesText: MutableList<String> = remember {
+        mutableStateListOf()
+    }
     val repeatOptions = RepeatOption.values().toList()
-    var selectedRepeatOption = remember { mutableStateOf(RepeatOption.NEVER) }
-    //val selectedTime = remember { mutableStateOf(Calendar.getInstance()) }
     var repeatMenuExpanded by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit){
-        checkboxes.clear()
-        checkboxesText.clear()
-        newCheckboxes.clear()
-        newCheckboxesText.clear()
-        taskStructure.taskTitle = ""
-        taskStructure.taskDesc = ""
-        taskStructure.taskDate = Date()
-        taskStructure.taskTime = Calendar.getInstance()
-        taskStructure.taskRepeatOption = RepeatOption.NEVER
-        taskStructure.checkboxes.clear()
-        taskStructure.checkboxesText.clear()
+    newCheckboxes.clear()
+    newCheckboxesText.clear()
+    LaunchedEffect(Unit) {
+        if (taskId != null) {
+            taskViewModel.getTaskById(db, taskId)
+        }
+    }
+    LaunchedEffect(dbTask) {
+        dbTask?.let { task ->
+            taskStructure.taskTitle = task.taskTitle
+            taskStructure.taskDesc = task.taskDesc
+            taskStructure.taskDate = task.date
+            taskStructure.taskRepeatOption = task.repeatOption
+            taskStructure.taskTime = task.time
+            taskStructure.checkboxes.clear()
+            taskStructure.checkboxesText.clear()
+            checkboxes.addAll(task.checkboxes)
+            checkboxesText.addAll(task.checkboxesText)
+
+        }
     }
     Column(
         modifier = Modifier
@@ -134,7 +144,10 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                         .fillMaxWidth(0.8f)
                         .background(CardBackGroundColor),
                     shape = RoundedCornerShape(7.dp),
-                    colors = TextFieldDefaults.textFieldColors(textColor = Color.White, containerColor = Color.Transparent)
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = Color.White,
+                        containerColor = Color.Transparent
+                    )
                 )
             }
             Image(
@@ -144,47 +157,50 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                     .clickable {
 
                         if (taskStructure.taskTitle.filter { !it.isWhitespace() } != "") {
-                            taskStructure.taskRepeatOption = selectedRepeatOption.value
+                            //taskStructure.taskTime = selectedTime.value
+                            //taskStructure.taskRepeatOption = selectedRepeatOption.value
                             checkboxes.forEachIndexed { index, _ ->
                                 if (checkboxesText[index].isNotBlank()) {
                                     newCheckboxes.add(checkboxes[index])
                                     newCheckboxesText.add(checkboxesText[index])
+
                                 }
                             }
                             taskStructure.checkboxes.addAll(newCheckboxes)
                             taskStructure.checkboxesText.addAll(newCheckboxesText)
-                            val task = TaskDb(
-                                null,
-                                taskStructure.taskTitle,
-                                taskStructure.taskDesc,
-                                taskStructure.taskDate,
-                                taskStructure.taskTime,
-                                taskStructure.taskRepeatOption,
-                                taskStructure.checkboxes,
-                                taskStructure.checkboxesText
-                            )
-                            taskStructure.checkboxesText.forEach { checkbox ->
-                                Log.d("MyTag", checkbox)
+                            dbTask?.let { task ->
+                                val updatedTask = task.copy(
+                                    taskTitle = taskStructure.taskTitle,
+                                    taskDesc = taskStructure.taskDesc,
+                                    date = taskStructure.taskDate,
+                                    time = taskStructure.taskTime,
+                                    repeatOption = taskStructure.taskRepeatOption,
+                                    checkboxes = taskStructure.checkboxes,
+                                    checkboxesText = taskStructure.checkboxesText
+                                )
+                                taskViewModel.viewModelScope.launch {
+                                    taskViewModel.updateTask(db, updatedTask)
+                                }
                             }
-                            Thread {
-                                db
-                                    .getDao()
-                                    .insertTask(task)
-                            }.start()
+                            navController.navigate("screen_addTask") {
+                                launchSingleTop = true
+                                restoreState = true
+
+                            }
 
                             taskStructure.taskTitle = ""
                             taskStructure.taskDesc = ""
                             checkboxes.clear()
                             checkboxesText.clear()
-                            checkboxesText.forEach { box ->
-                                Log.d("MyTag", "after clear ${box}")
-                            }
-                            taskStructure.taskTime = Calendar.getInstance()
-                        }
-                        navController.navigate("screen_addTask") {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        } else Toast
+                            .makeText(
+                                ContextProvider.getContext(),
+                                "Пожалуйста введите название задачи.",
+                                Toast.LENGTH_SHORT
+                            )
+                            .show()
+
+
                     }, contentDescription = "submitImage"
             )
         }
@@ -204,12 +220,16 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                     .padding(15.dp),
 
 
-                colors = TextFieldDefaults.textFieldColors(textColor = Color.White, containerColor = Color.Transparent)
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.White,
+                    containerColor = Color.Transparent
+                )
             )
         }
 
         Column() {
             checkboxes.forEachIndexed { index, isChecked ->
+                Log.d("MyTag","in foreach ${checkboxesText[index]}")
                 Row(
                     modifier = Modifier
                         .padding(horizontal = 5.dp, vertical = 3.dp)
@@ -266,7 +286,10 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                 }
             }
         }
-        Card(modifier = Modifier.padding(10.dp), colors = CardDefaults.cardColors(containerColor = CardBackGroundColor)) {
+        Card(
+            modifier = Modifier.padding(10.dp),
+            colors = CardDefaults.cardColors(containerColor = CardBackGroundColor)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -274,7 +297,11 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Повтор: ${selectedRepeatOption.value.title}", fontSize = 17.sp, color=Color.White)
+                Text(
+                    text = "Повтор: ${taskStructure.taskRepeatOption.title}",
+                    fontSize = 17.sp,
+                    color = Color.White
+                )
                 Box(modifier = Modifier.padding(start = 20.dp)) {
                     DropdownMenu(
                         expanded = repeatMenuExpanded,
@@ -284,7 +311,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                             .background(Color.White)
                     ) {
                         repeatOptions.forEach { option ->
-                            val selected = option == selectedRepeatOption.value
+                            val selected = option == taskStructure.taskRepeatOption
                             DropdownMenuItem(text = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     RadioButton(
@@ -294,17 +321,22 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                                             selectedColor = GreenSoft
                                         )
                                     )
-                                    Text(text = option.title, color = Color.Black, modifier = Modifier.padding(start = 3.dp), fontSize = 17.sp)
+                                    Text(
+                                        text = option.title,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(start = 3.dp),
+                                        fontSize = 17.sp
+                                    )
                                 }
-                            },onClick = {
-                                selectedRepeatOption.value = option
+                            }, onClick = {
+                                taskStructure.taskRepeatOption = option
 
                             })
                         }
                     }
                     Button(
                         colors = ButtonDefaults.buttonColors(GreenSoft),
-                        onClick = {repeatMenuExpanded = !repeatMenuExpanded }
+                        onClick = { repeatMenuExpanded = !repeatMenuExpanded }
                     ) {
                         Text(
                             text = "Изменить",
@@ -315,7 +347,10 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             }
         }
 
-        Card(modifier = Modifier.padding(10.dp), colors = CardDefaults.cardColors(containerColor = CardBackGroundColor)) {
+        Card(
+            modifier = Modifier.padding(10.dp),
+            colors = CardDefaults.cardColors(containerColor = CardBackGroundColor)
+        ) {
             val context = LocalContext.current
             val timePickerDialog = remember {
                 val currentTime = Calendar.getInstance()
@@ -340,8 +375,8 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                val formattedTime =timeFormat.format(taskStructure.taskTime.time.time)
-                Text(text = "Напоминание: ${formattedTime}", fontSize = 17.sp, color=Color.White)
+                val formattedTime = timeFormat.format(taskStructure.taskTime.time.time)
+                Text(text = "Напоминание: ${formattedTime}", fontSize = 17.sp, color = Color.White)
                 Button(
                     colors = ButtonDefaults.buttonColors(GreenSoft),
                     onClick = {
@@ -357,7 +392,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             val context = LocalContext.current
 
             val calendar = Calendar.getInstance()
-            calendar.time = Date()
+            calendar.time = taskStructure.taskDate
 
             val nowDay: Int = calendar.get(Calendar.DAY_OF_MONTH)
             val nowMonth: Int = calendar.get(Calendar.MONTH)
@@ -388,7 +423,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                     containerColor = CardBackGroundColor,
                     contentColor = Color.White
                 ),
-                //shape = RoundedCornerShape(20.dp)
+               // shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -409,13 +444,66 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                     }
                 }
             }
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.Center) {
+                if (showConfirmationDialog) {
+                    AlertDialog(
+                        modifier = Modifier.background(Color.Transparent),
+                        onDismissRequest = { showConfirmationDialog = false },
+                        title = {
+                            Text(
+                                text = "Подтвердите действие",
+                                color = Color.White
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "Вы уверены, что хотите безвозвратно удалить задачу?",
+                                color = Color.White
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    navController.navigate("screen_addTask") {
+                                        launchSingleTop = true
+                                        restoreState = true
 
+                                    }
+                                    taskId?.let {
+                                        taskViewModel.deleteTaskById(
+                                            db,
+                                            it
+                                        )
+                                    }
+                                    taskStructure.taskTitle = ""
+                                    taskStructure.taskDesc = ""
+                                    checkboxes.clear()
+                                    checkboxesText.clear()
+                                    showConfirmationDialog = false
+                                },
+                                colors = ButtonDefaults.buttonColors(GreenSoft)
+                            ) {
+                                Text(text = "Удалить", color = Color.Red)
+                            }
+                        },
+                        dismissButton = {
+                            Button(
+                                onClick = { showConfirmationDialog = false },
+                                colors = ButtonDefaults.buttonColors(GreenSoft)
+                            ) {
+                                Text(text = "Отмена", color = Color.Black)
+                            }
+                        },
+                        backgroundColor = CardBackGroundColor,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                }
+                Button(
+                    onClick = { showConfirmationDialog = true},
+                    colors = ButtonDefaults.buttonColors(Color.Red)
+                ) {
+                    Text(text = "Удалить", color = Color.White)
+                }
             }
 
 

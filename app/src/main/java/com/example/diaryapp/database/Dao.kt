@@ -33,14 +33,19 @@ interface Dao {
 
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteById(id: Int)
-
+    @Query("DELETE FROM tasks WHERE id = :id")
+    suspend fun deleteByTaskId(id: Int)
     @Query("SELECT * FROM notes WHERE id = :noteId")
     suspend fun getNoteById(noteId: Int): NoteDb?
-
+    @Query("SELECT * FROM tasks WHERE id = :taskId")
+    suspend fun getTaskById(taskId: Int): TaskDb?
     @Update()
     suspend fun update(note: NoteDb)
+    @Update()
+    suspend fun updateTask(task: TaskDb)
 
-
+    @Query("SELECT * FROM tasks WHERE taskTitle LIKE '%' || :searchQuery || '%' OR taskDesc LIKE '%' || :searchQuery || '%'")
+    fun searchTasksByText(searchQuery: String): List<TaskDb>
     @Query("SELECT * FROM notes WHERE noteTitle LIKE '%' || :searchQuery || '%' OR noteText LIKE '%' || :searchQuery || '%'")
     fun searchNotesByText(searchQuery: String): List<NoteDb>
 
@@ -57,4 +62,6 @@ interface Dao {
     suspend fun getNotesByActivityId(activityId: Int): List<NoteDb>
 
 
+    @Query("SELECT COUNT(*) FROM activities WHERE id = :activityId")
+    suspend fun getActivityCount(activityId: Int?): Int
 }

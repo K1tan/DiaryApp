@@ -23,6 +23,6 @@ data class NoteDb(
 
     @ColumnInfo(name="activityIds")
     @TypeConverters(Converters::class)
-    val activityIds: List<ActivitiesDb>
+    var activityIds: List<ActivitiesDb>
 
     )

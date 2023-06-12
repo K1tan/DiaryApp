@@ -229,7 +229,7 @@ fun AddNoteScreen(navController: NavHostController, noteStructure: NoteStructure
         ) {
             Text(
                 text = "Чем вы занимались?",
-                modifier = Modifier.padding(top = 10.dp),
+                modifier = Modifier.padding(top = 10.dp).fillMaxWidth(0.7f),
 
                 color = Color.White,
                 fontSize = 30.sp
@@ -248,7 +248,8 @@ fun AddNoteScreen(navController: NavHostController, noteStructure: NoteStructure
                 Icon(
                     painterResource(id = R.drawable.add_note_icon),
                     contentDescription = "Добавить занятие",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.size(40.dp)
                 )
             }
         }
@@ -258,7 +259,7 @@ fun AddNoteScreen(navController: NavHostController, noteStructure: NoteStructure
             colors = CardDefaults.cardColors(CardBackGroundColor),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(start = 10.dp)) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(start = 5.dp, top = 10.dp)) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.height(100.dp)
@@ -277,17 +278,17 @@ fun AddNoteScreen(navController: NavHostController, noteStructure: NoteStructure
                                         noteStructure.selectedActivities + activity
                                     }
                                 },
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.Top
                         ) {
                             Checkbox(
                                 checked = isChecked,
                                 onCheckedChange = null,
                                 colors = CheckboxDefaults.colors(GreenSoft),
                                 modifier = Modifier
-                                    .padding(end = 5.dp)
+                                    .padding(end = 2.dp)
                             )
 
-                            Text(text = activity.name, color = Color.White)
+                            Text(text = activity.name, color = Color.White, fontSize = 15.sp)
                         }
                     }
                 }
@@ -322,7 +323,7 @@ fun AddNoteScreen(navController: NavHostController, noteStructure: NoteStructure
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 15.dp)
-                .defaultMinSize(minHeight = 170.dp),
+                .defaultMinSize(minHeight = 130.dp),
             shape = RoundedCornerShape(30.dp),
             colors = CardDefaults.cardColors(CardBackGroundColor)
 
@@ -375,8 +376,6 @@ fun AddNoteScreen(navController: NavHostController, noteStructure: NoteStructure
                     Thread {
                         db.getDao().insertNote(note)
                     }.start()
-
-
                     noteStructure.noteTitle = ""
                     noteStructure.noteText = ""
                     noteStructure.noteMood = R.drawable.ic_normal

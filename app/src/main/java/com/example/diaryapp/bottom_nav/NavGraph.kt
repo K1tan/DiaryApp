@@ -1,10 +1,16 @@
 package com.example.diaryapp.bottom_nav
 
 import android.os.Build
+import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptions
+import androidx.navigation.Navigator
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.diaryapp.NoteStructure
@@ -17,6 +23,7 @@ import com.example.diaryapp.screens.AddTaskScreen
 import com.example.diaryapp.screens.CalendarScreen
 import com.example.diaryapp.screens.DiaryScreen
 import com.example.diaryapp.screens.EditNoteDataScreen
+import com.example.diaryapp.screens.EditTaskScreen
 import com.example.diaryapp.screens.SettingsScreen
 import com.example.diaryapp.screens.StatScreen
 
@@ -30,7 +37,9 @@ fun NavGraph(navHostController: NavHostController) {
         TaskStructure()
     }
 
+
     NavHost(navController = navHostController, startDestination = "screen_diary"){
+
         composable("screen_diary"){
             DiaryScreen(navController = navHostController)
         }
@@ -52,6 +61,10 @@ fun NavGraph(navHostController: NavHostController) {
         composable("screen_addDataNote"){
             AddNoteDataScreen(navController = navHostController, noteStructure)
         }
+        composable("screen_editTask/{taskId}"){backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull()
+            EditTaskScreen(navController = navHostController, taskStructure = taskStructure, taskId)
+        }
         composable("screen_editDataNote/{noteId}") { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString("noteId")?.toIntOrNull()
             EditNoteDataScreen(navController = navHostController, noteStructure, noteId)
@@ -65,3 +78,4 @@ fun NavGraph(navHostController: NavHostController) {
 
     }
 }
+

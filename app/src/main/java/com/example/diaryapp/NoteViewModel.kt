@@ -1,5 +1,9 @@
 package com.example.diaryapp
 
+import android.util.Log
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diaryapp.database.ActivitiesDb
@@ -9,13 +13,17 @@ import com.example.diaryapp.database.NoteDb
 import com.example.diaryapp.date.convertToDayStartEnd
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
 
 class NoteViewModel : ViewModel() {
+
+
     private val _notes = MutableStateFlow(emptyList<NoteDb>())
     val notes: StateFlow<List<NoteDb>> = _notes
 
@@ -27,7 +35,8 @@ class NoteViewModel : ViewModel() {
 
     private val _activities = MutableStateFlow<List<ActivitiesDb>>(emptyList())
     val activities: StateFlow<List<ActivitiesDb>> = _activities
-
+    private val _activityCounts = MutableStateFlow<Map<Int?, Int>>(emptyMap())
+    val activityCounts: StateFlow<Map<Int?, Int>> = _activityCounts
     fun getAllNotes(db: MainDb) {
         viewModelScope.launch(Dispatchers.IO) {
             val notes = db.getDao().getAllNotes()
@@ -64,8 +73,6 @@ class NoteViewModel : ViewModel() {
 
         }
     }
-
-
     fun deleteNoteById(db: MainDb, id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             db.getDao().deleteById(id)
@@ -101,4 +108,58 @@ class NoteViewModel : ViewModel() {
             _activities.value = updatedActivities
         }
     }
+
+    suspend fun doesActivityExist(activityId: Int?): Boolean {
+        return if (activityId != null) {
+            db.getDao().getActivityCount(activityId) > 0
+        } else {
+            false
+        }
+    }
+
+    suspend fun removeNonExistentActivitiesFromNotes(notes: List<NoteDb>) {
+        withContext(Dispatchers.IO){
+            val idToRemove = mutableListOf<Int>()
+            val updatedNotes = mutableListOf<NoteDb>()
+            notes.forEach { note ->
+                val existingActivityIds = note.activityIds.filter { activity ->
+                    val doesExist = doesActivityExist(activityId = activity.id)
+                    if (!doesExist && !idToRemove.contains(activity.id)) {
+                        activity.id?.let { idToRemove.add(it) }
+                    }
+                    doesExist
+                }
+                note.activityIds = existingActivityIds
+                updatedNotes.add(note)
+
+            }
+
+            updatedNotes.forEach { note ->
+                val updatedActivityIds = note.activityIds.filterNot { activity ->
+                    idToRemove.contains(activity.id)
+                }
+                note.activityIds = updatedActivityIds
+                updateNoteInDatabase(note)
+            }
+        }
+    }
+
+    private suspend fun updateNoteInDatabase(note: NoteDb) {
+        withContext(Dispatchers.IO) {
+            db.getDao().update(note)
+        }
+    }
+    fun countActivityMentions(): Flow<Map<ActivitiesDb, Int>> = flow {
+        val activityCountMap = mutableMapOf<ActivitiesDb, Int>()
+
+        _notes.value.forEach { note ->
+            note.activityIds.forEach { activity ->
+                val count = activityCountMap.getOrDefault(activity, 0)
+                activityCountMap[activity] = count + 1
+            }
+        }
+
+        emit(activityCountMap)
+    }
+
 }

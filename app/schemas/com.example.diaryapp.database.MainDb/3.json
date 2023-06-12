@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "d3a6a7cb1468492af6a2bc5b7e11dfca",
+    "identityHash": "19480974fad7e31635c8ceb2b767f50e",
     "entities": [
       {
         "tableName": "notes",
@@ -56,7 +56,7 @@
       },
       {
         "tableName": "tasks",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `taskTitle` TEXT NOT NULL, `taskDesc` TEXT NOT NULL, `taskDate` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `taskTitle` TEXT NOT NULL, `taskDesc` TEXT NOT NULL, `taskDate` INTEGER NOT NULL, `taskTime` INTEGER NOT NULL, `taskRepeatOption` TEXT NOT NULL, `checkboxes` TEXT NOT NULL, `checkboxesText` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -80,6 +80,30 @@
             "fieldPath": "date",
             "columnName": "taskDate",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "taskTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repeatOption",
+            "columnName": "taskRepeatOption",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checkboxes",
+            "columnName": "checkboxes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checkboxesText",
+            "columnName": "checkboxesText",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -122,7 +146,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd3a6a7cb1468492af6a2bc5b7e11dfca')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '19480974fad7e31635c8ceb2b767f50e')"
     ]
   }
 }
