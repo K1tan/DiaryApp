@@ -33,6 +33,7 @@ class NoteViewModel : ViewModel() {
     val activities: StateFlow<List<ActivitiesDb>> = _activities
     private val _activityCounts = MutableStateFlow<Map<Int?, Int>>(emptyMap())
     val activityCounts: StateFlow<Map<Int?, Int>> = _activityCounts
+
     fun getAllNotes(db: MainDb) {
         viewModelScope.launch(Dispatchers.IO) {
             val notes = db.getDao().getAllNotes()

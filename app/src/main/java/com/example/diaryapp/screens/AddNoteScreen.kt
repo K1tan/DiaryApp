@@ -1,6 +1,8 @@
 package com.example.diaryapp.screens
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
@@ -76,6 +78,7 @@ import com.example.diaryapp.ui.theme.TextColorDark
 import com.example.diaryapp.ui.theme.TextColorLight
 import com.pixplicity.easyprefs.library.Prefs
 
+
 @Composable
 fun AddNoteScreen(
     navController: NavHostController,
@@ -100,6 +103,7 @@ fun AddNoteScreen(
         // Обработка выбранной фотографии
         if (uri != null) {
             val newPhotoUrl = uri.toString()
+            var bitmap: Bitmap? = BitmapFactory.decodeFile(uri.path)
             noteStructure.notePhoto = newPhotoUrl
             photoUrl.value = newPhotoUrl
             selectedPhoto.value = uri
@@ -111,6 +115,9 @@ fun AddNoteScreen(
         val uri = it.data?.data
         if (uri != null) {
             val newPhotoUrl = uri.toString()
+
+
+
             noteStructure.notePhoto = newPhotoUrl
             photoUrl.value = newPhotoUrl
             selectedPhoto.value = uri
@@ -414,7 +421,6 @@ fun AddNoteScreen(
 
             onClick = {
                 // Открыть галерею для выбора фотографии
-
 
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                     .apply {

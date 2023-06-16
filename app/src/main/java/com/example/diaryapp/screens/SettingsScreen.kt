@@ -84,7 +84,10 @@ fun SettingsScreen(
         ) {
             Switch(
                 checked = remindersEnabled.value,
-                onCheckedChange = { remindersEnabled.value = it },
+                onCheckedChange = { isChecked ->
+                    remindersEnabled.value = isChecked
+                    Prefs.putBoolean("reminders", isChecked)
+                },
                 modifier = Modifier.padding(end = 8.dp)
             )
             Text(
@@ -105,7 +108,10 @@ fun SettingsScreen(
         ) {
             Switch(
                 checked = taskNotificationsEnabled.value,
-                onCheckedChange = { taskNotificationsEnabled.value = it },
+                onCheckedChange = { isChecked ->
+                    taskNotificationsEnabled.value = isChecked
+                    Prefs.putBoolean("taskNotifications", isChecked)
+                },
                 modifier = Modifier.padding(end = 8.dp)
             )
             Text(

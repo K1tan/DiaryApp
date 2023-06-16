@@ -4,12 +4,7 @@ package com.example.diaryapp.screens
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
-import android.content.Intent
-import android.graphics.ImageDecoder
-import android.net.Uri
 import android.os.Build
-import android.provider.MediaStore
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -53,8 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -62,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.diaryapp.ContextProvider
 import com.example.diaryapp.NoteViewModel
 import com.example.diaryapp.R
@@ -100,8 +94,10 @@ val db = MainDb.getDb(ContextProvider.getContext())
 @Composable
 fun DiaryScreen(navController: NavHostController) {
     val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
-    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
-    val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
+    val backgroundColor =
+        if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+    val cardBackground =
+        if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
 
     val noteViewModel: NoteViewModel = viewModel()
     val dbNotes by noteViewModel.notes.collectAsState()
@@ -430,42 +426,24 @@ fun DiaryScreen(navController: NavHostController) {
                                         modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                                     )
 
-                                    if (note.photoUrl?.isNotEmpty() == true) {
-                                        Log.d("dev", "uriS: ${note.photoUrl}")
-                                        Log.d("dev", "uri: ${Uri.parse(note.photoUrl)}")
+                                    if (note.photoUrl != null) {
 
                                         if (permissionState.status.isGranted) {
-                                            val context = LocalContext.current
-                                            val contentResolver = context.contentResolver
-                                            val imageUri = Uri.parse("content://com.android.providers.media.documents/document/image%3A259121")
 
-//                                            val bitmap =
-//                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-//                                                    ImageDecoder.decodeBitmap(
-//                                                        ImageDecoder.createSource(
-//                                                            contentResolver,
-//                                                            imageUri
-//                                                        )
-//                                                    )
-//                                                } else {
-//                                                    MediaStore.Images.Media.getBitmap(
-//                                                        contentResolver,
-//                                                        imageUri
-//                                                    )
-//                                                }
-                                            val painter: Painter = painterResource(R.drawable.add_note_icon)
-//                                            val painter2: AsyncImagePainter = rememberImagePainter(bitmap)
-//                                            Image(
-//                                                bitmap = bitmap.asImageBitmap(),
-//                                                contentDescription = "Изображение",
-//                                                modifier = Modifier.size(200.dp),
-//                                                contentScale = ContentScale.Crop
-//                                            )
+                                            Row(
+                                                Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                AsyncImage(
+                                                    model = note.photoUrl,
+                                                    contentDescription = "",
+                                                    modifier = Modifier.size(200.dp),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                            }
+
                                         }
                                     }
-
-
-                                    // Проверка наличия разрешения
                                 }
                             }
                         }

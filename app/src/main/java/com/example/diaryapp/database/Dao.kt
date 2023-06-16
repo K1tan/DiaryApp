@@ -28,7 +28,7 @@ interface Dao {
     @Delete
     suspend fun deleteActivity(activity: ActivitiesDb)
 
-    @Query("SELECT * FROM notes")
+    @Query("SELECT * FROM notes ORDER BY id DESC")
     fun getAllNotes(): List<NoteDb>
 
     @Query("SELECT * FROM tasks")

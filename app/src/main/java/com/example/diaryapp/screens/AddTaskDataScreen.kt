@@ -3,7 +3,9 @@ package com.example.diaryapp.screens
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -55,6 +57,8 @@ import com.example.diaryapp.R
 import com.example.diaryapp.TaskStructure
 import com.example.diaryapp.TaskViewModel
 import com.example.diaryapp.database.TaskDb
+import com.example.diaryapp.notifications.AlarmItem
+import com.example.diaryapp.notifications.AndroidAlarmScheduler
 import com.example.diaryapp.notifications.NotificationService
 import com.example.diaryapp.ui.theme.BackGroundColor
 import com.example.diaryapp.ui.theme.BackGroundColorLight
@@ -65,6 +69,7 @@ import com.example.diaryapp.ui.theme.TextColorDark
 import com.example.diaryapp.ui.theme.TextColorLight
 import com.pixplicity.easyprefs.library.Prefs
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -77,6 +82,7 @@ enum class RepeatOption(val title: String) {
     ANNUALLY("Ежегодно")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,6 +104,9 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
     val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
     val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
     val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
+
+    val scheduler = AndroidAlarmScheduler(LocalContext.current)
+    var alarmItem: AlarmItem? = null
 
     //val selectedTime = remember { mutableStateOf(Calendar.getInstance()) }
     var repeatMenuExpanded by remember { mutableStateOf(false) }
@@ -179,15 +188,22 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                                 Log.d("MyTag", checkbox)
                             }
                             Thread {
-                                db
-                                    .getDao()
-                                    .insertTask(task)
+                                db.getDao().insertTask(task)
                             }.start()
 
-                            service.showNotification(
-                                taskStructure.taskTitle,
-                                taskStructure.taskDesc
+                            if (Prefs.getBoolean("", true)) {
+
+                                service.showNotification(
+                                    taskStructure.taskTitle,
+                                    taskStructure.taskDesc
+                                )
+                            }
+
+                            val alarmItem = AlarmItem(
+                                time = LocalDateTime.now().plusSeconds(10),
+                                message = "message"
                             )
+                            alarmItem?.let(scheduler::schedule)
 
                             taskStructure.taskTitle = ""
                             taskStructure.taskDesc = ""
