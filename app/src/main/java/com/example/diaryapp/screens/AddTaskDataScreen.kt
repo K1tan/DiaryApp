@@ -311,8 +311,8 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp, 8.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
+                    .padding(vertical = 8.dp, horizontal =  8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -446,11 +446,11 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp, 8.dp),
+                        .padding(vertical = 8.dp, horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceAround
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Дата: ${date.value}", fontSize = 16.sp)
+                    Text(text = "Дата: ${date.value}", fontSize = 16.sp, color = textColor)
                     Button(
                         colors = ButtonDefaults.buttonColors(GreenSoft),
                         onClick = {

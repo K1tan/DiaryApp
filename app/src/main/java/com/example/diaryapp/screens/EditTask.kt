@@ -309,7 +309,7 @@ fun EditTaskScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp, 8.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -393,8 +393,8 @@ fun EditTaskScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp, 8.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
+                    .padding(vertical = 8.dp, horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Log.d("develop", "ts: ${taskStructure.taskTime.time.time}")
