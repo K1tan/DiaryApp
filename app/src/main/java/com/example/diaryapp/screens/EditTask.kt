@@ -149,6 +149,7 @@ fun EditTaskScreen(
                     label = {
                         Text(
                             text = "Название задачи",
+                            color = textColor
                         )
                     }, modifier = Modifier
                         .fillMaxWidth(0.8f)
@@ -454,7 +455,7 @@ fun EditTaskScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text(text = "Дата: ${date.value}", fontSize = 16.sp)
+                    Text(text = "Дата: ${date.value}", fontSize = 16.sp, color = textColor)
                     Button(
                         colors = ButtonDefaults.buttonColors(GreenSoft),
                         onClick = {

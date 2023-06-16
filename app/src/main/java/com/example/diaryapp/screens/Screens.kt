@@ -426,10 +426,9 @@ fun DiaryScreen(navController: NavHostController) {
                                         modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                                     )
 
-                                    if (note.photoUrl != null) {
+                                    if (!note.photoUrl.isNullOrEmpty()) {
 
                                         if (permissionState.status.isGranted) {
-
                                             Row(
                                                 Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.Center

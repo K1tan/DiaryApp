@@ -147,6 +147,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                     label = {
                         Text(
                             text = "Название задачи",
+                            color = textColor
                         )
                     }, modifier = Modifier
                         .fillMaxWidth(0.8f)
@@ -299,7 +300,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
 
                     }
                 ) {
-                    Text(text = "Добавить чекбокс", color = textColor)
+                    Text(text = "Добавить чекбокс", color = Color.Black)
                 }
             }
         }
@@ -393,7 +394,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             ) {
                 val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
                 val formattedTime = timeFormat.format(taskStructure.taskTime.time.time)
-                Text(text = "Напоминание: ${formattedTime}", fontSize = 16.sp, color = Color.White)
+                Text(text = "Напоминание: ${formattedTime}", fontSize = 16.sp, color = textColor)
                 Button(
                     colors = ButtonDefaults.buttonColors(GreenSoft),
                     onClick = {
@@ -449,13 +450,11 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text(text = "Дата: ${date.value}", fontSize = 17.sp)
+                    Text(text = "Дата: ${date.value}", fontSize = 16.sp)
                     Button(
                         colors = ButtonDefaults.buttonColors(GreenSoft),
                         onClick = {
                             datePickerDialog.show()
-
-
                         }) {
                         Text(text = "Изменить", color = Color.Black)
                     }

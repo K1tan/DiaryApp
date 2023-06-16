@@ -74,6 +74,8 @@ fun CalendarScreen(navController: NavHostController) {
     val filteredTasks by taskViewModel.filteredTasks.collectAsState()
     val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
     val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+    val arrowLeft = if (Prefs.getBoolean("darkTheme", false)) R.drawable.ic_arrow_left_black else R.drawable.ic_arrow_left
+    val arrowRight = if (Prefs.getBoolean("darkTheme", false)) R.drawable.ic_arrow_right_black else R.drawable.ic_arrow_right
 
 
     val dateFormatPattern = "yyyy-MM-dd"
@@ -123,7 +125,7 @@ fun CalendarScreen(navController: NavHostController) {
                 Icon(
                     painter = painterResource(R.drawable.ic_arrow_left),
                     contentDescription = "Previous Month",
-                    tint = Color.White
+                    tint = Color.Gray
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
@@ -151,7 +153,7 @@ fun CalendarScreen(navController: NavHostController) {
                 Icon(
                     painter = painterResource(R.drawable.ic_arrow_right),
                     contentDescription = "Next Month",
-                    tint = Color.White
+                    tint = Color.Gray
                 )
             }
         }
