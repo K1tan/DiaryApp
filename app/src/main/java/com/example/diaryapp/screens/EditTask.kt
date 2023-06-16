@@ -422,7 +422,7 @@ fun EditTaskScreen(
             val nowMonth: Int = calendar.get(Calendar.MONTH)
             val nowYear: Int = calendar.get(Calendar.YEAR)
             val date = remember {
-                mutableStateOf("$nowDay/${nowMonth + 1}/$nowYear")
+                mutableStateOf("$nowYear-${nowMonth + 1}-$nowDay")
             }
             val datePickerDialog = remember {
                 val dialog = DatePickerDialog(

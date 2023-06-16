@@ -1,7 +1,10 @@
 package com.example.diaryapp.screens
 
 import android.graphics.Paint
+import android.os.Build
+import android.text.format.DateFormat
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -60,10 +63,12 @@ import com.example.diaryapp.ui.theme.TextColorLight
 import com.pixplicity.easyprefs.library.Prefs
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Locale
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalendarScreen(navController: NavHostController) {
     val taskViewModel: TaskViewModel = viewModel()
@@ -73,10 +78,8 @@ fun CalendarScreen(navController: NavHostController) {
     }
     val filteredTasks by taskViewModel.filteredTasks.collectAsState()
     val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
-    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
-    val arrowLeft = if (Prefs.getBoolean("darkTheme", false)) R.drawable.ic_arrow_left_black else R.drawable.ic_arrow_left
-    val arrowRight = if (Prefs.getBoolean("darkTheme", false)) R.drawable.ic_arrow_right_black else R.drawable.ic_arrow_right
-
+    val backgroundColor =
+        if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
 
     val dateFormatPattern = "yyyy-MM-dd"
     val dateFormatter = SimpleDateFormat(dateFormatPattern, Locale.getDefault())
@@ -168,7 +171,10 @@ fun CalendarScreen(navController: NavHostController) {
             modifier = Modifier
                 .padding(10.dp)
                 .fillMaxWidth()
-                .aspectRatio(1.3f)
+                .aspectRatio(1.3f),
+            taskList = dbTasks,
+            month = currentMonth,
+            year = currentYear
         )
         Column(
             modifier = Modifier
@@ -249,13 +255,16 @@ fun ItemView(item: TaskDb, onClick: (TaskDb) -> Unit) {
 private const val CALENDAR_ROWS = 5
 private const val CALENDAR_COLUMNS = 7
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Calendar(
     modifier: Modifier = Modifier,
     calendarInput: List<CalendarInput>,
     onDayClick: (Int) -> Unit,
     strokeWidth: Float = 15f,
-    //month:String
+    taskList: List<TaskDb>,
+    month: Int,
+    year: Int
 ) {
 
     var canvasSize by remember {
@@ -352,18 +361,34 @@ fun Calendar(
                     strokeWidth = strokeWidth
                 )
             }
-            val textHeight = 16.dp.toPx()
+            val textHeight = 14.dp.toPx()
+            for (i in taskList) {
+                Log.d("dev", "task: ${i.date}")
+            }
             for (i in calendarInput.indices) {
+
+                val day = i + 1
+
+                // Проверка наличия задачи на текущую дату
+                val hasTask = taskList.any { task -> task.date == "$year-${month + 1}-$day" }
+                Log.d("dev", "cal: $day-${month + 1}-$year")
+
                 val textPositionX = xSteps * (i % CALENDAR_COLUMNS) + strokeWidth
                 val textPositionY = (i / CALENDAR_COLUMNS) * ySteps + textHeight + strokeWidth / 2
+
                 drawContext.canvas.nativeCanvas.apply {
+                    val textColor = if (hasTask) Color.Red.toArgb() else Color.Green.toArgb()
+
+                    val dayOfWeek = LocalDate.of(year, month + 1, day).dayOfWeek
+                    val dayOfWeekText = dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale("ru"))
+
                     drawText(
-                        "${i + 1}",
+                        "$day, $dayOfWeekText",
                         textPositionX,
                         textPositionY,
                         Paint().apply {
                             textSize = textHeight
-                            color = Color.Green.toArgb()
+                            color = textColor
                             isFakeBoldText = true
                         }
                     )
@@ -374,6 +399,42 @@ fun Calendar(
 
 }
 
+private fun getDayOfWeek(): String {
+    val calendar = Calendar.getInstance()
+    return when (calendar[Calendar.DAY_OF_WEEK]) {
+        Calendar.MONDAY -> {
+            "Пн"
+        }
+
+        Calendar.TUESDAY -> {
+            "Вт"
+        }
+
+        Calendar.WEDNESDAY -> {
+            "Ср"
+        }
+
+        Calendar.THURSDAY -> {
+            "Чт"
+        }
+
+        Calendar.FRIDAY -> {
+            "Пт"
+        }
+
+        Calendar.SATURDAY -> {
+            "Сб"
+        }
+
+        Calendar.SUNDAY -> {
+            "Вс"
+        }
+
+        else -> {
+            ""
+        }
+    }
+}
 
 private fun getMonthName(month: Int): String {
     val calendar = Calendar.getInstance()
