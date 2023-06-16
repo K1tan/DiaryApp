@@ -156,7 +156,7 @@ fun EditTaskScreen(
                         .background(cardBackground),
                     shape = RoundedCornerShape(7.dp),
                     colors = TextFieldDefaults.textFieldColors(
-                        textColor = Color.White,
+                        textColor = textColor,
                         containerColor = Color.Transparent
                     )
                 )
@@ -226,6 +226,7 @@ fun EditTaskScreen(
                 label = {
                     Text(
                         text = "Описание",
+                        color = textColor
                     )
                 }, modifier = Modifier
                     .fillMaxWidth(1f)
@@ -235,7 +236,7 @@ fun EditTaskScreen(
 
 
                 colors = TextFieldDefaults.textFieldColors(
-                    textColor = Color.White,
+                    textColor = textColor,
                     containerColor = Color.Transparent
                 )
             )
@@ -269,7 +270,7 @@ fun EditTaskScreen(
                         },
                         shape = RoundedCornerShape(20.dp),
                         label = {
-                            Text(text = "Название")
+                            Text(text = "Название", color = textColor)
                         },
                         modifier = Modifier
                             //.fillMaxWidth(1f)
@@ -451,9 +452,9 @@ fun EditTaskScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp, 8.dp),
+                        .padding(vertical = 8.dp, horizontal =  8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceAround
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = "Дата: ${date.value}", fontSize = 16.sp, color = textColor)
                     Button(

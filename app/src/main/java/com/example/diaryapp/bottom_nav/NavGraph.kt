@@ -35,7 +35,7 @@ fun NavGraph(navHostController: NavHostController) {
 
     val remindersEnabled = remember { mutableStateOf(true) }
     val taskNotificationsEnabled = remember { mutableStateOf(true) }
-    val darkThemeEnabled = remember { mutableStateOf(Prefs.getBoolean("darkTheme", true)) }
+    val darkThemeEnabled = remember { mutableStateOf(Prefs.getBoolean("darkTheme", false)) }
 
     NavHost(navController = navHostController, startDestination = "screen_diary") {
 

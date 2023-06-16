@@ -108,6 +108,15 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
     val scheduler = AndroidAlarmScheduler(LocalContext.current)
     var alarmItem: AlarmItem? = null
 
+    val context = LocalContext.current
+
+    val calendar = Calendar.getInstance()
+    calendar.time = Date()
+
+    val nowDay: Int = calendar.get(Calendar.DAY_OF_MONTH)
+    val nowMonth: Int = calendar.get(Calendar.MONTH)
+    val nowYear: Int = calendar.get(Calendar.YEAR)
+
     //val selectedTime = remember { mutableStateOf(Calendar.getInstance()) }
     var repeatMenuExpanded by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -117,7 +126,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
         newCheckboxesText.clear()
         taskStructure.taskTitle = ""
         taskStructure.taskDesc = ""
-        taskStructure.taskDate = ""
+        taskStructure.taskDate = "$nowYear-${nowMonth + 1}-$nowDay"
         taskStructure.taskTime = Calendar.getInstance()
         taskStructure.taskRepeatOption = RepeatOption.NEVER
         taskStructure.checkboxes.clear()
@@ -154,7 +163,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                         .background(cardBackground),
                     shape = RoundedCornerShape(7.dp),
                     colors = TextFieldDefaults.textFieldColors(
-                        textColor = Color.White,
+                        textColor = textColor,
                         containerColor = Color.Transparent
                     )
                 )
@@ -230,6 +239,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                 label = {
                     Text(
                         text = "Описание",
+                        color = textColor
                     )
                 }, modifier = Modifier
                     .fillMaxWidth(1f)
@@ -407,14 +417,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
         }
 
         Column {
-            val context = LocalContext.current
 
-            val calendar = Calendar.getInstance()
-            calendar.time = Date()
-
-            val nowDay: Int = calendar.get(Calendar.DAY_OF_MONTH)
-            val nowMonth: Int = calendar.get(Calendar.MONTH)
-            val nowYear: Int = calendar.get(Calendar.YEAR)
             val date = remember {
                 mutableStateOf("$nowYear-${nowMonth + 1}-$nowDay")
             }

@@ -1,8 +1,6 @@
 package com.example.diaryapp.screens
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
@@ -98,19 +96,6 @@ fun AddNoteScreen(
 
 
     val selectedPhoto: MutableState<Uri?> = remember { mutableStateOf(null) }
-
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        // Обработка выбранной фотографии
-        if (uri != null) {
-            val newPhotoUrl = uri.toString()
-            var bitmap: Bitmap? = BitmapFactory.decodeFile(uri.path)
-            noteStructure.notePhoto = newPhotoUrl
-            photoUrl.value = newPhotoUrl
-            selectedPhoto.value = uri
-        }
-    }
 
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -282,7 +267,8 @@ fun AddNoteScreen(
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Чем вы занимались?",
@@ -307,7 +293,7 @@ fun AddNoteScreen(
                 Icon(
                     painterResource(id = R.drawable.add_note_icon),
                     contentDescription = "Добавить занятие",
-                    tint = Color.White,
+                    tint = if (Prefs.getBoolean("darkTheme")) Color.White else Color.Black,
                     modifier = Modifier.size(40.dp)
                 )
             }
@@ -360,7 +346,9 @@ fun AddNoteScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 15.dp), horizontalArrangement = Arrangement.SpaceBetween
+                .padding(top = 15.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = " Заметка:",
@@ -442,7 +430,8 @@ fun AddNoteScreen(
             }
             Log.d("dev", "selecP: ${selectedPhoto.value}")
 
-            if (selectedPhoto.value != null) {
+            //Удалить фото
+            if (noteStructure.notePhoto.isNotEmpty()) {
                 Button(
                     onClick = {
                         noteStructure.notePhoto = ""
@@ -456,11 +445,11 @@ fun AddNoteScreen(
                 Log.d("dev", "selecP: ${selectedPhoto.value}")
             }
         }
-        if (selectedPhoto.value != null) {
+        if (noteStructure.notePhoto.isNotEmpty()) {
             Log.d("dev", "true")
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(selectedPhoto.value)
+                    .data(noteStructure.notePhoto)
                     .build(),
                 contentDescription = "icon",
                 contentScale = ContentScale.Inside,

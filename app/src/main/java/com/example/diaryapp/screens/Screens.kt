@@ -437,7 +437,7 @@ fun DiaryScreen(navController: NavHostController) {
                                                     model = note.photoUrl,
                                                     contentDescription = "",
                                                     modifier = Modifier.size(200.dp),
-                                                    contentScale = ContentScale.Crop
+                                                    contentScale = ContentScale.Inside
                                                 )
                                             }
 

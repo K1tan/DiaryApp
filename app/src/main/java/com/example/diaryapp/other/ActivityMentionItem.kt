@@ -46,7 +46,7 @@ fun ActivityMentionItem(activityName: String, mentionCount: Int) {
         ) {
             Text(
                 text = mentionCount.toString(),
-                color = Color.White,
+                color = textColor,
                 textAlign = TextAlign.Center
             )
         }
