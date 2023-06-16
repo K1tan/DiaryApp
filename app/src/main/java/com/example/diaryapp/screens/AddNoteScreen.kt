@@ -91,8 +91,10 @@ fun AddNoteScreen(
     val activities by noteViewModel.activities.collectAsState()
 
     val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
-    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
-    val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
+    val backgroundColor =
+        if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+    val cardBackground =
+        if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
 
 
     val selectedPhoto: MutableState<Uri?> = remember { mutableStateOf(null) }
@@ -110,19 +112,17 @@ fun AddNoteScreen(
         }
     }
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        println("selected file URI ${it.data?.data}")
-        val uri = it.data?.data
-        if (uri != null) {
-            val newPhotoUrl = uri.toString()
-
-
-
-            noteStructure.notePhoto = newPhotoUrl
-            photoUrl.value = newPhotoUrl
-            selectedPhoto.value = uri
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            println("selected file URI ${it.data?.data}")
+            val uri = it.data?.data
+            if (uri != null) {
+                val newPhotoUrl = uri.toString()
+                noteStructure.notePhoto = newPhotoUrl
+                photoUrl.value = newPhotoUrl
+                selectedPhoto.value = uri
+            }
         }
-    }
 
     LaunchedEffect(Unit) {
         noteViewModel.loadActivities()
@@ -378,7 +378,7 @@ fun AddNoteScreen(
                 },
                 colors = ButtonDefaults.buttonColors(GreenSoft),
             ) {
-                Text(text = "Добавить", color = Color.Black, fontSize = 20.sp)
+                Text(text = "Добавить", color = Color.Black, fontSize = 16.sp)
             }
         }
         Card(
@@ -417,24 +417,45 @@ fun AddNoteScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
 
-            onClick = {
-                // Открыть галерею для выбора фотографии
-
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-                    .apply {
-                        addCategory(Intent.CATEGORY_OPENABLE)
-                    }
-                launcher.launch(intent)
-//                galleryLauncher.launch("image/*")
-            },
-            colors = ButtonDefaults.buttonColors(GreenSoft)
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround
         ) {
-            Text(text = "Добавить фото", color = Color.Black, fontSize = 20.sp)
-        }
-        Log.d("dev", "selecP: ${selectedPhoto.value}")
 
+            Button(
+                onClick = {
+                    // Открыть галерею для выбора фотографии
+                    val intent = Intent(
+                        Intent.ACTION_OPEN_DOCUMENT,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    )
+                        .apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                        }
+                    launcher.launch(intent)
+                },
+                colors = ButtonDefaults.buttonColors(GreenSoft)
+            ) {
+                Text(text = "Добавить фото", color = Color.Black, fontSize = 16.sp)
+            }
+            Log.d("dev", "selecP: ${selectedPhoto.value}")
+
+            if (selectedPhoto.value != null) {
+                Button(
+                    onClick = {
+                        noteStructure.notePhoto = ""
+                        photoUrl.value = ""
+                        selectedPhoto.value = null
+                    },
+                    colors = ButtonDefaults.buttonColors(Color.Red)
+                ) {
+                    Text(text = "Удалить фото", color = Color.Black, fontSize = 16.sp)
+                }
+                Log.d("dev", "selecP: ${selectedPhoto.value}")
+            }
+        }
         if (selectedPhoto.value != null) {
             Log.d("dev", "true")
             AsyncImage(
@@ -488,7 +509,7 @@ fun AddNoteScreen(
                 ).show()
 
             }, colors = ButtonDefaults.buttonColors(GreenSoft)) {
-                Text(text = "Создать", color = Color.Black, fontSize = 20.sp)
+                Text(text = "Создать", color = Color.Black, fontSize = 16.sp)
             }
         }
 
