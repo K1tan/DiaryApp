@@ -2,9 +2,7 @@ package com.example.diaryapp.database
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import java.util.Date
 
@@ -20,9 +18,11 @@ data class NoteDb(
     val noteMood: Int,
     @ColumnInfo(name = "noteDate")
     val noteDate: Date,
+    @ColumnInfo(name = "notePhoto")
+    val photoUrl: String? = null, // Добавляем поле для хранения ссылки на фото
 
-    @ColumnInfo(name="activityIds")
+    @ColumnInfo(name = "activityIds")
     @TypeConverters(Converters::class)
     var activityIds: List<ActivitiesDb>
 
-    )
+)

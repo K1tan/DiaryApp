@@ -2,30 +2,22 @@ package com.example.diaryapp.bottom_nav
 
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.diaryapp.R
 import com.example.diaryapp.ui.theme.GreenSoft
-
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
@@ -38,12 +30,11 @@ fun BottomNavController(navController: NavController) {
         BottomNavItem.CalendarScreen,
         BottomNavItem.SettingsScreen
     )
-    val bgNavColor:Color = Color(R.color.greenSoft)
+    val bgNavColor: Color = Color(R.color.greenSoft)
     BottomNavigation(
         backgroundColor = GreenSoft,
-
-
-    ) {
+        elevation = 0.dp
+        ) {
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentRout = backStackEntry?.destination?.route
 
@@ -59,7 +50,7 @@ fun BottomNavController(navController: NavController) {
                         contentDescription = "Icon",
                         modifier = Modifier.size(30.dp),
 
-                    )
+                        )
                 },
                 /*label = {
                     var isSelected = item.route == currentRout
@@ -79,5 +70,10 @@ fun BottomNavController(navController: NavController) {
             )
         }
     }
+}
 
+@Preview
+@Composable
+fun Preview() {
+    BottomNavController(navController = NavController(LocalContext.current))
 }

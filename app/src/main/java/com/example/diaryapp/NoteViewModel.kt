@@ -1,18 +1,14 @@
 package com.example.diaryapp
 
-import android.util.Log
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diaryapp.database.ActivitiesDb
-import com.example.diaryapp.screens.db
 import com.example.diaryapp.database.MainDb
 import com.example.diaryapp.database.NoteDb
 import com.example.diaryapp.date.convertToDayStartEnd
-import com.google.gson.Gson
+import com.example.diaryapp.screens.db
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,6 +40,7 @@ class NoteViewModel : ViewModel() {
             _filteredNotes.value = notes
         }
     }
+
     fun searchNotes(searchQuery: String, selectedDate: Date?) {
         viewModelScope.launch(Dispatchers.IO) {
             val notes = if (selectedDate != null) {
@@ -73,6 +70,7 @@ class NoteViewModel : ViewModel() {
 
         }
     }
+
     fun deleteNoteById(db: MainDb, id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             db.getDao().deleteById(id)
@@ -80,6 +78,7 @@ class NoteViewModel : ViewModel() {
             _notes.value = updatedNotes
         }
     }
+
     fun getNoteById(db: MainDb, noteId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val note = db.getDao().getNoteById(noteId)
@@ -87,11 +86,13 @@ class NoteViewModel : ViewModel() {
             _note.emit(note)
         }
     }
+
     suspend fun updateNote(db: MainDb, note: NoteDb) {
         withContext(Dispatchers.IO) {
             db.getDao().update(note)
         }
     }
+
     fun loadActivities() {
         viewModelScope.launch {
 
@@ -100,8 +101,9 @@ class NoteViewModel : ViewModel() {
 
         }
     }
+
     fun deleteActivity(activity: ActivitiesDb) {
-        viewModelScope.launch (Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             db.getDao().deleteActivity(activity)
             val updatedActivities = _activities.value.toMutableList()
             updatedActivities.remove(activity)
@@ -118,7 +120,7 @@ class NoteViewModel : ViewModel() {
     }
 
     suspend fun removeNonExistentActivitiesFromNotes(notes: List<NoteDb>) {
-        withContext(Dispatchers.IO){
+        withContext(Dispatchers.IO) {
             val idToRemove = mutableListOf<Int>()
             val updatedNotes = mutableListOf<NoteDb>()
             notes.forEach { note ->
@@ -149,6 +151,7 @@ class NoteViewModel : ViewModel() {
             db.getDao().update(note)
         }
     }
+
     fun countActivityMentions(): Flow<Map<ActivitiesDb, Int>> = flow {
         val activityCountMap = mutableMapOf<ActivitiesDb, Int>()
 
@@ -161,5 +164,9 @@ class NoteViewModel : ViewModel() {
 
         emit(activityCountMap)
     }
+
+    suspend fun getTopActivitiesByMood(mood: Int): List<String> = viewModelScope.async {
+        db.getDao().getTopActivitiesByMood(mood)
+    }.await()
 
 }

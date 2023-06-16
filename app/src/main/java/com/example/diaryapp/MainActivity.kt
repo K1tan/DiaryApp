@@ -22,13 +22,14 @@ class MainActivity : ComponentActivity() {
 
             ContextProvider.init(applicationContext)
             setTheme(R.style.Theme_DiaryApp)
-            DiaryAppTheme() {
+            DiaryAppTheme {
                 MainScreen()
             }
 
         }
     }
 }
+
 object ContextProvider {
     private var appContext: Context? = null
 
@@ -40,7 +41,6 @@ object ContextProvider {
         return appContext ?: throw IllegalStateException("Context has not been initialized")
     }
 }
-
 
 
 @Composable
@@ -58,7 +58,8 @@ fun GreetingPreview() {
         Greeting("Android")
     }
 }
+
 @Composable
-fun addNote(){
+fun addNote() {
 
 }

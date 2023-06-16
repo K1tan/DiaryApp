@@ -3,16 +3,16 @@ package com.example.diaryapp.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.example.diaryapp.screens.RepeatOption
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.util.Calendar
+import java.util.Date
 
 @Entity(tableName = "tasks")
-data class TaskDb (
+data class TaskDb(
     @PrimaryKey(autoGenerate = true)
     val id: Int? = null,
     @ColumnInfo(name = "taskTitle")
@@ -20,7 +20,7 @@ data class TaskDb (
     @ColumnInfo(name = "taskDesc")
     val taskDesc: String,
     @ColumnInfo(name = "taskDate")
-    val date: Date,
+    val date: String,
     @ColumnInfo(name = "taskTime")
     val time: Calendar,
     @ColumnInfo(name = "taskRepeatOption")
@@ -31,11 +31,12 @@ data class TaskDb (
     @ColumnInfo(name = "checkboxesText")
     @TypeConverters(DateConverter::class)
     val checkboxesText: MutableList<String> = mutableListOf()
-    )
+)
 
 
 class DateConverter {
     private val gson = Gson()
+
     @TypeConverter
     fun fromDate(value: Date): Long {
         return value.time

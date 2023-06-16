@@ -1,5 +1,7 @@
 package com.example.diaryapp.screens
 
+import android.content.Intent
+import android.provider.MediaStore
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,16 +27,26 @@ import androidx.navigation.NavHostController
 import com.example.diaryapp.NoteStructure
 import com.example.diaryapp.R
 import com.example.diaryapp.ui.theme.BackGroundColor
+import com.example.diaryapp.ui.theme.BackGroundColorLight
 import com.example.diaryapp.ui.theme.CardBackGroundColor
+import com.example.diaryapp.ui.theme.CardBackGroundColorLight
+import com.example.diaryapp.ui.theme.TextColorDark
+import com.example.diaryapp.ui.theme.TextColorLight
+import com.pixplicity.easyprefs.library.Prefs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddNoteDataScreen(navController: NavHostController, noteStructure: NoteStructure) {
-    Column() {
+
+    val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
+    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+    val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
+
+    Column {
 
         Row(
             modifier = Modifier
-                .background(BackGroundColor)
+                .background(backgroundColor)
                 .fillMaxWidth()
                 .padding(top = 15.dp), horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -49,9 +61,9 @@ fun AddNoteDataScreen(navController: NavHostController, noteStructure: NoteStruc
                         )
                     }, modifier = Modifier
                         .fillMaxWidth(0.7f)
-                        .background(CardBackGroundColor),
+                        .background(backgroundColor),
                     shape = RoundedCornerShape(7.dp),
-                    colors = TextFieldDefaults.textFieldColors(textColor = Color.White)
+                    colors = TextFieldDefaults.textFieldColors(textColor = textColor)
                 )
 
             }
@@ -65,6 +77,7 @@ fun AddNoteDataScreen(navController: NavHostController, noteStructure: NoteStruc
                             restoreState = true
 
                         }
+
                     }, contentDescription = "submitImage"
             )
 
@@ -80,10 +93,10 @@ fun AddNoteDataScreen(navController: NavHostController, noteStructure: NoteStruc
             }, modifier = Modifier
                 .fillMaxWidth(1f)
                 .fillMaxHeight()
-                .background(CardBackGroundColor)
+                .background(cardBackground)
                 .padding(15.dp),
 
-            colors = TextFieldDefaults.textFieldColors(textColor = Color.White)
+            colors = TextFieldDefaults.textFieldColors(textColor = textColor)
         )
 
     }

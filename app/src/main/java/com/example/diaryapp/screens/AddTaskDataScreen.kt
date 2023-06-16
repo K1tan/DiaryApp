@@ -3,33 +3,29 @@ package com.example.diaryapp.screens
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.hardware.camera2.params.BlackLevelPattern
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,12 +55,15 @@ import com.example.diaryapp.R
 import com.example.diaryapp.TaskStructure
 import com.example.diaryapp.TaskViewModel
 import com.example.diaryapp.database.TaskDb
+import com.example.diaryapp.notifications.NotificationService
 import com.example.diaryapp.ui.theme.BackGroundColor
+import com.example.diaryapp.ui.theme.BackGroundColorLight
 import com.example.diaryapp.ui.theme.CardBackGroundColor
+import com.example.diaryapp.ui.theme.CardBackGroundColorLight
 import com.example.diaryapp.ui.theme.GreenSoft
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.example.diaryapp.ui.theme.TextColorDark
+import com.example.diaryapp.ui.theme.TextColorLight
+import com.pixplicity.easyprefs.library.Prefs
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -83,26 +82,33 @@ enum class RepeatOption(val title: String) {
 @Composable
 fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStructure) {
     val taskViewModel: TaskViewModel = viewModel()
-    var checkboxes:MutableList<Boolean> = remember {
+    var checkboxes: MutableList<Boolean> = remember {
         mutableStateListOf()
     }
-    var checkboxesText:MutableList<String> = remember {
+    var checkboxesText: MutableList<String> = remember {
         mutableStateListOf()
     }
     val newCheckboxes = mutableListOf<Boolean>()
     val newCheckboxesText = mutableListOf<String>()
     val repeatOptions = RepeatOption.values().toList()
     var selectedRepeatOption = remember { mutableStateOf(RepeatOption.NEVER) }
+
+    val service = NotificationService(LocalContext.current)
+
+    val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
+    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+    val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
+
     //val selectedTime = remember { mutableStateOf(Calendar.getInstance()) }
     var repeatMenuExpanded by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         checkboxes.clear()
         checkboxesText.clear()
         newCheckboxes.clear()
         newCheckboxesText.clear()
         taskStructure.taskTitle = ""
         taskStructure.taskDesc = ""
-        taskStructure.taskDate = Date()
+        taskStructure.taskDate = ""
         taskStructure.taskTime = Calendar.getInstance()
         taskStructure.taskRepeatOption = RepeatOption.NEVER
         taskStructure.checkboxes.clear()
@@ -111,15 +117,18 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackGroundColor)
-            .verticalScroll(ScrollState(0))
-            .padding(bottom = 70.dp)
+            .background(backgroundColor)
+            .verticalScroll(rememberScrollState())
+            .fillMaxHeight()
+            .padding(end = 16.dp, start = 16.dp, bottom = 64.dp),
     ) {
         Row(
             modifier = Modifier
-                .background(BackGroundColor)
+                .background(backgroundColor)
                 .fillMaxWidth()
-                .padding(top = 15.dp), horizontalArrangement = Arrangement.SpaceBetween
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.padding(start = 20.dp)) {
                 TextField(
@@ -132,9 +141,12 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                         )
                     }, modifier = Modifier
                         .fillMaxWidth(0.8f)
-                        .background(CardBackGroundColor),
+                        .background(cardBackground),
                     shape = RoundedCornerShape(7.dp),
-                    colors = TextFieldDefaults.textFieldColors(textColor = Color.White, containerColor = Color.Transparent)
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = Color.White,
+                        containerColor = Color.Transparent
+                    )
                 )
             }
             Image(
@@ -172,6 +184,11 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                                     .insertTask(task)
                             }.start()
 
+                            service.showNotification(
+                                taskStructure.taskTitle,
+                                taskStructure.taskDesc
+                            )
+
                             taskStructure.taskTitle = ""
                             taskStructure.taskDesc = ""
                             checkboxes.clear()
@@ -200,19 +217,22 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                 }, modifier = Modifier
                     .fillMaxWidth(1f)
                     .defaultMinSize(minHeight = 50.dp)
-                    .background(CardBackGroundColor)
+                    .background(cardBackground)
                     .padding(15.dp),
 
 
-                colors = TextFieldDefaults.textFieldColors(textColor = Color.White, containerColor = Color.Transparent)
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = textColor,
+                    containerColor = Color.Transparent
+                )
             )
         }
 
-        Column() {
+        Column {
             checkboxes.forEachIndexed { index, isChecked ->
                 Row(
                     modifier = Modifier
-                        .padding(horizontal = 5.dp, vertical = 3.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -235,7 +255,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                         },
                         shape = RoundedCornerShape(20.dp),
                         label = {
-                            Text(text = "Название")
+                            Text(text = "Название", color = textColor)
                         },
                         modifier = Modifier
                             //.fillMaxWidth(1f)
@@ -243,8 +263,8 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                             .background(Color.Transparent)
                             .padding(5.dp),
                         colors = TextFieldDefaults.textFieldColors(
-                            textColor = Color.White,
-                            containerColor = CardBackGroundColor
+                            textColor = textColor,
+                            containerColor = cardBackground
                         )
                     )
                 }
@@ -252,7 +272,8 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
                 Button(
                     colors = ButtonDefaults.buttonColors(GreenSoft),
@@ -262,19 +283,26 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
 
                     }
                 ) {
-                    Text(text = "Добавить чекбокс", color = Color.Black)
+                    Text(text = "Добавить чекбокс", color = textColor)
                 }
             }
         }
-        Card(modifier = Modifier.padding(10.dp), colors = CardDefaults.cardColors(containerColor = CardBackGroundColor)) {
+        Card(
+            modifier = Modifier.padding(10.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBackground)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp, 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .padding(8.dp, 8.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Повтор: ${selectedRepeatOption.value.title}", fontSize = 17.sp, color=Color.White)
+                Text(
+                    text = "Повтор: ${selectedRepeatOption.value.title}",
+                    fontSize = 16.sp,
+                    color = textColor
+                )
                 Box(modifier = Modifier.padding(start = 20.dp)) {
                     DropdownMenu(
                         expanded = repeatMenuExpanded,
@@ -294,9 +322,14 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                                             selectedColor = GreenSoft
                                         )
                                     )
-                                    Text(text = option.title, color = Color.Black, modifier = Modifier.padding(start = 3.dp), fontSize = 17.sp)
+                                    Text(
+                                        text = option.title,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(start = 4.dp),
+                                        fontSize = 16.sp
+                                    )
                                 }
-                            },onClick = {
+                            }, onClick = {
                                 selectedRepeatOption.value = option
 
                             })
@@ -304,7 +337,7 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                     }
                     Button(
                         colors = ButtonDefaults.buttonColors(GreenSoft),
-                        onClick = {repeatMenuExpanded = !repeatMenuExpanded }
+                        onClick = { repeatMenuExpanded = !repeatMenuExpanded }
                     ) {
                         Text(
                             text = "Изменить",
@@ -315,7 +348,10 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             }
         }
 
-        Card(modifier = Modifier.padding(10.dp), colors = CardDefaults.cardColors(containerColor = CardBackGroundColor)) {
+        Card(
+            modifier = Modifier.padding(8.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBackground)
+        ) {
             val context = LocalContext.current
             val timePickerDialog = remember {
                 val currentTime = Calendar.getInstance()
@@ -335,13 +371,13 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp, 10.dp),
+                    .padding(8.dp, 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                val formattedTime =timeFormat.format(taskStructure.taskTime.time.time)
-                Text(text = "Напоминание: ${formattedTime}", fontSize = 17.sp, color=Color.White)
+                val formattedTime = timeFormat.format(taskStructure.taskTime.time.time)
+                Text(text = "Напоминание: ${formattedTime}", fontSize = 16.sp, color = Color.White)
                 Button(
                     colors = ButtonDefaults.buttonColors(GreenSoft),
                     onClick = {
@@ -363,15 +399,15 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             val nowMonth: Int = calendar.get(Calendar.MONTH)
             val nowYear: Int = calendar.get(Calendar.YEAR)
             val date = remember {
-                mutableStateOf("$nowDay/${nowMonth + 1}/$nowYear")
+                mutableStateOf("$nowYear-${nowMonth + 1}-$nowDay")
             }
             val datePickerDialog = remember {
                 val dialog = DatePickerDialog(
                     context,
                     DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-                        date.value = "$dayOfMonth/${month + 1}/$year"
+                        date.value = "$year-${month + 1}-$dayOfMonth"
                         calendar.set(year, month, dayOfMonth)
-                        taskStructure.taskDate = calendar.time
+                        taskStructure.taskDate = date.value
                     },
                     nowYear,
                     nowMonth,
@@ -383,9 +419,9 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
+                    .padding(8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = CardBackGroundColor,
+                    containerColor = cardBackground,
                     contentColor = Color.White
                 ),
                 //shape = RoundedCornerShape(20.dp)
@@ -393,11 +429,11 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp, 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(8.dp, 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text(text = "Выбранная дата: ${date.value}", fontSize = 17.sp)
+                    Text(text = "Дата: ${date.value}", fontSize = 17.sp)
                     Button(
                         colors = ButtonDefaults.buttonColors(GreenSoft),
                         onClick = {
@@ -417,11 +453,6 @@ fun AddTaskDataScreen(navController: NavHostController, taskStructure: TaskStruc
             ) {
 
             }
-
-
         }
-
-
     }
-
 }

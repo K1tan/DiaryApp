@@ -2,10 +2,13 @@ package com.example.diaryapp.screens
 
 
 import android.annotation.SuppressLint
-import androidx.lifecycle.viewmodel.compose.viewModel
 import android.app.DatePickerDialog
 import android.content.Context
+import android.content.Intent
+import android.graphics.ImageDecoder
+import android.net.Uri
 import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
@@ -50,28 +53,36 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.test.core.app.ActivityScenario.launch
 import com.example.diaryapp.ContextProvider
 import com.example.diaryapp.NoteViewModel
 import com.example.diaryapp.R
-import com.example.diaryapp.database.ActivitiesDb
 import com.example.diaryapp.database.MainDb
-import com.example.diaryapp.database.NoteDb
 import com.example.diaryapp.date.DateInRussianFormat
 import com.example.diaryapp.ui.theme.AwfulMoodColor
 import com.example.diaryapp.ui.theme.BackGroundColor
+import com.example.diaryapp.ui.theme.BackGroundColorLight
 import com.example.diaryapp.ui.theme.BadMoodColor
 import com.example.diaryapp.ui.theme.CardBackGroundColor
+import com.example.diaryapp.ui.theme.CardBackGroundColorLight
 import com.example.diaryapp.ui.theme.GoodMoodColor
 import com.example.diaryapp.ui.theme.GreenSoft
 import com.example.diaryapp.ui.theme.NormalMoodColor
 import com.example.diaryapp.ui.theme.SuperMoodColor
-import com.google.gson.Gson
+import com.example.diaryapp.ui.theme.TextColorDark
+import com.example.diaryapp.ui.theme.TextColorLight
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.pixplicity.easyprefs.library.Prefs
 import kotlinx.coroutines.*
 import java.util.Calendar
 import java.util.Date
@@ -85,9 +96,12 @@ val db = MainDb.getDb(ContextProvider.getContext())
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun DiaryScreen(navController: NavHostController) {
+    val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
+    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+    val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
 
     val noteViewModel: NoteViewModel = viewModel()
     val dbNotes by noteViewModel.notes.collectAsState()
@@ -95,38 +109,47 @@ fun DiaryScreen(navController: NavHostController) {
     var selectedDate by remember { mutableStateOf<Date?>(null) }
     val filteredNotes by noteViewModel.filteredNotes.collectAsState()
 
-
-
-
-
+    val permissionState = rememberPermissionState(android.Manifest.permission.READ_EXTERNAL_STORAGE)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackGroundColor)
+            .background(backgroundColor)
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
 
-            DatePickerButton(selectedDate = selectedDate){ date ->
+            DatePickerButton(selectedDate = selectedDate) { date ->
                 selectedDate = date
                 noteViewModel.searchNotes(searchQuery, selectedDate)
             }
 
             TextField(
-                colors = TextFieldDefaults.textFieldColors(CardBackGroundColor),
+                colors = TextFieldDefaults.textFieldColors(cardBackground),
                 value = searchQuery,
                 onValueChange = {
                     searchQuery = it
                     noteViewModel.searchNotes(searchQuery, selectedDate)
                 },
                 label = {
-                    Row() {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
                         Image(
                             painterResource(id = R.drawable.search_icon),
                             contentDescription = "ic_search",
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(24.dp)
                         )
-                        Text(text = "ПОИСК", fontSize = 15.sp)
+                        Text(text = "ПОИСК", fontSize = 14.sp)
                     }
                 },
                 shape = RoundedCornerShape(30.dp),
@@ -134,10 +157,12 @@ fun DiaryScreen(navController: NavHostController) {
         }
 
 
-
         Box(Modifier.padding(bottom = 50.dp)) {
 
             LaunchedEffect(Unit) {
+                if (!permissionState.status.isGranted) {
+                    permissionState.launchPermissionRequest()
+                }
                 noteViewModel.getAllNotes(db)
             }
             LazyColumn {
@@ -148,7 +173,7 @@ fun DiaryScreen(navController: NavHostController) {
                             modifier = Modifier
                                 .padding(16.dp)
                                 .fillMaxWidth(),
-                            color = Color.White,
+                            color = textColor,
                             fontSize = 15.sp
                         )
                     }
@@ -156,7 +181,7 @@ fun DiaryScreen(navController: NavHostController) {
                     items(
                         filteredNotes
                     ) { note ->
-                        Box() {
+                        Box {
                             var showConfirmationDialog by remember { mutableStateOf(false) }
                             var expanded by remember { mutableStateOf(false) }
                             //подвердить удаление:
@@ -167,13 +192,13 @@ fun DiaryScreen(navController: NavHostController) {
                                     title = {
                                         Text(
                                             text = "Подтвердите действие",
-                                            color = Color.White
+                                            color = textColor
                                         )
                                     },
                                     text = {
                                         Text(
                                             text = "Вы уверены, что хотите безвозвратно удалить запись?",
-                                            color = Color.White
+                                            color = textColor
                                         )
                                     },
                                     confirmButton = {
@@ -200,7 +225,7 @@ fun DiaryScreen(navController: NavHostController) {
                                             Text(text = "Отмена", color = Color.Black)
                                         }
                                     },
-                                    backgroundColor = CardBackGroundColor,
+                                    backgroundColor = cardBackground,
                                     shape = RoundedCornerShape(10.dp)
                                 )
                             }
@@ -209,7 +234,7 @@ fun DiaryScreen(navController: NavHostController) {
                                     .padding(16.dp)
                                     .fillMaxWidth(),
                                 shape = RoundedCornerShape(30.dp),
-                                colors = CardDefaults.cardColors(CardBackGroundColor)
+                                colors = CardDefaults.cardColors(cardBackground)
                             ) {
 
                                 Column(
@@ -225,7 +250,7 @@ fun DiaryScreen(navController: NavHostController) {
                                             R.drawable.ic_awful -> {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(64.dp)
+                                                        .size(48.dp)
                                                         .background(
                                                             AwfulMoodColor,
                                                             shape = CircleShape
@@ -234,7 +259,7 @@ fun DiaryScreen(navController: NavHostController) {
                                                     Image(
                                                         painterResource(id = R.drawable.ic_awful),
                                                         contentDescription = "ic_awful",
-                                                        Modifier.size(64.dp)
+                                                        Modifier.size(48.dp)
                                                     )
                                                 }
                                             }
@@ -242,7 +267,7 @@ fun DiaryScreen(navController: NavHostController) {
                                             R.drawable.ic_bad -> {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(64.dp)
+                                                        .size(48.dp)
                                                         .background(
                                                             BadMoodColor,
                                                             shape = CircleShape
@@ -251,7 +276,7 @@ fun DiaryScreen(navController: NavHostController) {
                                                     Image(
                                                         painterResource(id = R.drawable.ic_bad),
                                                         contentDescription = "ic_bad",
-                                                        Modifier.size(64.dp)
+                                                        Modifier.size(48.dp)
                                                     )
                                                 }
                                             }
@@ -259,7 +284,7 @@ fun DiaryScreen(navController: NavHostController) {
                                             R.drawable.ic_normal -> {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(64.dp)
+                                                        .size(48.dp)
                                                         .background(
                                                             NormalMoodColor,
                                                             shape = CircleShape
@@ -268,7 +293,7 @@ fun DiaryScreen(navController: NavHostController) {
                                                     Image(
                                                         painterResource(id = R.drawable.ic_normal),
                                                         contentDescription = "ic_normal",
-                                                        Modifier.size(64.dp)
+                                                        Modifier.size(48.dp)
                                                     )
                                                 }
                                             }
@@ -276,7 +301,7 @@ fun DiaryScreen(navController: NavHostController) {
                                             R.drawable.ic_good -> {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(64.dp)
+                                                        .size(48.dp)
                                                         .background(
                                                             GoodMoodColor,
                                                             shape = CircleShape
@@ -285,7 +310,7 @@ fun DiaryScreen(navController: NavHostController) {
                                                     Image(
                                                         painterResource(id = R.drawable.ic_good),
                                                         contentDescription = "ic_good",
-                                                        Modifier.size(64.dp)
+                                                        Modifier.size(48.dp)
                                                     )
                                                 }
                                             }
@@ -293,7 +318,7 @@ fun DiaryScreen(navController: NavHostController) {
                                             R.drawable.ic_super -> {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(64.dp)
+                                                        .size(48.dp)
                                                         .background(
                                                             SuperMoodColor,
                                                             shape = CircleShape
@@ -302,14 +327,14 @@ fun DiaryScreen(navController: NavHostController) {
                                                     Image(
                                                         painterResource(id = R.drawable.ic_super),
                                                         contentDescription = "ic_super",
-                                                        Modifier.size(64.dp)
+                                                        Modifier.size(48.dp)
                                                     )
                                                 }
                                             }
 
                                             else -> Box(
                                                 modifier = Modifier
-                                                    .size(64.dp)
+                                                    .size(48.dp)
                                                     .background(
                                                         NormalMoodColor,
                                                         shape = CircleShape
@@ -318,25 +343,25 @@ fun DiaryScreen(navController: NavHostController) {
                                                 Image(
                                                     painterResource(id = R.drawable.ic_normal),
                                                     contentDescription = "ic_normal",
-                                                    Modifier.size(64.dp)
+                                                    Modifier.size(48.dp)
                                                 )
                                             }
                                         }
 
-                                        Row() {
-                                            Column() {
+                                        Row {
+                                            Column {
                                                 Text(
                                                     //modifier = Modifier.fillMaxWidth(),
                                                     text = "${DateInRussianFormat(date = note.noteDate)}",
                                                     fontSize = 20.sp,
-                                                    color = Color.White
+                                                    color = textColor
                                                 )
                                                 /**ACTIVITY**/
                                                 for (activity in note.activityIds) {
                                                     Text(
                                                         text = "• ${activity.name}",
                                                         fontSize = 16.sp,
-                                                        color = Color.White,
+                                                        color = textColor,
                                                         modifier = Modifier.padding(top = 4.dp)
                                                     )
                                                 }
@@ -393,32 +418,65 @@ fun DiaryScreen(navController: NavHostController) {
                                         Text(
                                             modifier = Modifier.fillMaxWidth(1f),
                                             text = note.noteTitle,
-                                            fontSize = 30.sp,
-                                            color = Color.White
+                                            fontSize = 24.sp,
+                                            color = textColor
                                         )
                                     }
 
                                     Text(
                                         text = note.noteText,
                                         fontSize = 20.sp,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(top = 10.dp, bottom = 20.dp)
+                                        color = textColor,
+                                        modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                                     )
+
+                                    if (note.photoUrl?.isNotEmpty() == true) {
+                                        Log.d("dev", "uriS: ${note.photoUrl}")
+                                        Log.d("dev", "uri: ${Uri.parse(note.photoUrl)}")
+
+                                        if (permissionState.status.isGranted) {
+                                            val context = LocalContext.current
+                                            val contentResolver = context.contentResolver
+                                            val imageUri = Uri.parse("content://com.android.providers.media.documents/document/image%3A259121")
+
+//                                            val bitmap =
+//                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+//                                                    ImageDecoder.decodeBitmap(
+//                                                        ImageDecoder.createSource(
+//                                                            contentResolver,
+//                                                            imageUri
+//                                                        )
+//                                                    )
+//                                                } else {
+//                                                    MediaStore.Images.Media.getBitmap(
+//                                                        contentResolver,
+//                                                        imageUri
+//                                                    )
+//                                                }
+                                            val painter: Painter = painterResource(R.drawable.add_note_icon)
+//                                            val painter2: AsyncImagePainter = rememberImagePainter(bitmap)
+//                                            Image(
+//                                                bitmap = bitmap.asImageBitmap(),
+//                                                contentDescription = "Изображение",
+//                                                modifier = Modifier.size(200.dp),
+//                                                contentScale = ContentScale.Crop
+//                                            )
+                                        }
+                                    }
+
+
+                                    // Проверка наличия разрешения
                                 }
                             }
-
                         }
+
                     }
                 }
             }
-
         }
+
     }
-
-
 }
-
-
 
 
 @Composable
@@ -440,7 +498,6 @@ fun DatePickerButton(selectedDate: Date?, onDateSelected: (Date) -> Unit) {
         Text(text = "КАЛЕНДАРЬ", color = Color.White, modifier = Modifier.padding(vertical = 10.dp))
     }
 }
-
 
 
 fun showDatePickerDialog(context: Context, initialDate: Date?, onDateSelected: (Date) -> Unit) {

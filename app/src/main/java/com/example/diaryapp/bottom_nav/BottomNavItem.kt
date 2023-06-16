@@ -2,11 +2,11 @@ package com.example.diaryapp.bottom_nav
 
 import com.example.diaryapp.R
 
-sealed class BottomNavItem(val title:String, val iconId:Int, val route:String){
-    object DiaryScreen: BottomNavItem("Дневник", R.drawable.diary_icon, "screen_diary")
-    object StatScreen: BottomNavItem("Статистика", R.drawable.stat_icon, "screen_stat")
-    object AddNoteScreen: BottomNavItem("Запись", R.drawable.add_note_icon, "screen_addNote")
-    object AddTaskScreen: BottomNavItem("Задачи", R.drawable.task_icon, "screen_addTask")
-    object CalendarScreen: BottomNavItem("Календарь", R.drawable.calendar_icon, "screen_calendar")
-    object SettingsScreen: BottomNavItem("Настройки", R.drawable.settings_icon, "screen_settings")
+sealed class BottomNavItem(val title: String, val iconId: Int, val route: String) {
+    object DiaryScreen : BottomNavItem("Дневник", R.drawable.baseline_menu_book_24, "screen_diary")
+    object StatScreen : BottomNavItem("Статистика", R.drawable.baseline_bar_chart_24, "screen_stat")
+    object AddNoteScreen : BottomNavItem("Запись", R.drawable.baseline_add_circle_outline_24, "screen_addNote")
+    object AddTaskScreen : BottomNavItem("Задачи", R.drawable.baseline_task_24, "screen_addTask")
+    object CalendarScreen : BottomNavItem("Календарь", R.drawable.baseline_calendar_month_24, "screen_calendar")
+    object SettingsScreen : BottomNavItem("Настройки", R.drawable.baseline_settings_24, "screen_settings")
 }

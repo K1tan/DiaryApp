@@ -1,30 +1,33 @@
 package com.example.diaryapp.database
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
-import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
 @Dao
 interface Dao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNote(noteDb: NoteDb)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNoteWithActivities(note: NoteDb): Long
+
     @Insert
     fun insertTask(taskDb: TaskDb)
+
     @Insert
     fun insertActivity(activity: ActivitiesDb)
+
     @Query("SELECT * FROM activities")
     suspend fun getAllActivities(): List<ActivitiesDb>
+
     @Delete
     suspend fun deleteActivity(activity: ActivitiesDb)
+
     @Query("SELECT * FROM notes")
     fun getAllNotes(): List<NoteDb>
 
@@ -33,19 +36,25 @@ interface Dao {
 
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteById(id: Int)
+
     @Query("DELETE FROM tasks WHERE id = :id")
     suspend fun deleteByTaskId(id: Int)
+
     @Query("SELECT * FROM notes WHERE id = :noteId")
     suspend fun getNoteById(noteId: Int): NoteDb?
+
     @Query("SELECT * FROM tasks WHERE id = :taskId")
     suspend fun getTaskById(taskId: Int): TaskDb?
+
     @Update()
     suspend fun update(note: NoteDb)
+
     @Update()
     suspend fun updateTask(task: TaskDb)
 
     @Query("SELECT * FROM tasks WHERE taskTitle LIKE '%' || :searchQuery || '%' OR taskDesc LIKE '%' || :searchQuery || '%'")
     fun searchTasksByText(searchQuery: String): List<TaskDb>
+
     @Query("SELECT * FROM notes WHERE noteTitle LIKE '%' || :searchQuery || '%' OR noteText LIKE '%' || :searchQuery || '%'")
     fun searchNotesByText(searchQuery: String): List<NoteDb>
 
@@ -56,12 +65,20 @@ interface Dao {
     //@Query("SELECT * FROM notes WHERE noteDate = :selectedDate AND (noteTitle LIKE '%' || :searchQuery || '%' OR noteText LIKE '%' || :searchQuery || '%')")
     @Query("SELECT * FROM notes WHERE noteDate BETWEEN :dayStart AND :dayEnd AND (noteTitle LIKE '%' || :searchQuery || '%' OR noteText LIKE '%' || :searchQuery || '%')")
     fun searchNotesByDateAndText(dayStart: Date, dayEnd: Date, searchQuery: String): List<NoteDb>
+
     @Query("UPDATE notes SET activityIds = :activityIds WHERE :activityId IN (SELECT id FROM activities)")
     suspend fun updateActivityIds(activityId: Int, activityIds: List<ActivitiesDb>)
+
     @Query("SELECT * FROM notes WHERE :activityId IN (SELECT id FROM activities)")
     suspend fun getNotesByActivityId(activityId: Int): List<NoteDb>
 
-
     @Query("SELECT COUNT(*) FROM activities WHERE id = :activityId")
     suspend fun getActivityCount(activityId: Int?): Int
+
+    @Query("SELECT a.name AS activity FROM activities AS a WHERE EXISTS (SELECT 1 FROM notes AS n WHERE n.noteMood = :mood AND a.name IN (n.noteText) LIMIT 1) GROUP BY a.name ORDER BY COUNT(*) DESC LIMIT 3")
+    suspend fun getTopActivitiesByMood(mood: Int): List<String>
+
+    @Query("SELECT * FROM tasks WHERE taskDate = :today")
+    suspend fun getTasksForToday(today: Date): List<TaskDb>
+
 }

@@ -1,10 +1,12 @@
 package com.example.diaryapp.screens
 
 import android.graphics.Paint
+import android.util.Log
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -38,39 +43,41 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.diaryapp.ui.theme.BackGroundColor
-import com.example.diaryapp.ui.theme.GreenSoft
-import kotlinx.coroutines.launch
-import java.util.Calendar
+import androidx.navigation.NavHostController
 import com.example.diaryapp.R
 import com.example.diaryapp.TaskViewModel
 import com.example.diaryapp.database.TaskDb
-import java.util.Locale
+import com.example.diaryapp.ui.theme.BackGroundColor
+import com.example.diaryapp.ui.theme.BackGroundColorLight
+import com.example.diaryapp.ui.theme.GreenSoft
+import com.example.diaryapp.ui.theme.TextColorDark
+import com.example.diaryapp.ui.theme.TextColorLight
+import com.pixplicity.easyprefs.library.Prefs
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 
 @Composable
-fun CalendarScreen(){
+fun CalendarScreen(navController: NavHostController) {
     val taskViewModel: TaskViewModel = viewModel()
     val dbTasks by taskViewModel.tasks.collectAsState()
     LaunchedEffect(Unit) {
         taskViewModel.getAllTasks(db)
     }
+    val filteredTasks by taskViewModel.filteredTasks.collectAsState()
+    val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
+    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+
 
     val dateFormatPattern = "yyyy-MM-dd"
     val dateFormatter = SimpleDateFormat(dateFormatPattern, Locale.getDefault())
-
-    val calendarInputs = mutableListOf<CalendarInput>()
-    val calendar = Calendar.getInstance()
-    for (i in 1..calendar.getActualMaximum(Calendar.DAY_OF_MONTH)) {
-        val date = "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-$i"
-        val tasksForDay = dbTasks.filter { dateFormatter.format(it.date) == date }
-        calendarInputs.add(CalendarInput(i, tasksForDay))
-    }
 
     var clickedCalendarElem by remember {
         mutableStateOf<CalendarInput?>(null)
@@ -78,7 +85,6 @@ fun CalendarScreen(){
     var currentMonth by remember {
         mutableStateOf(Calendar.getInstance().get(Calendar.MONTH))
     }
-
     LaunchedEffect(Unit) {
         taskViewModel.getAllTasks(db)
     }
@@ -86,12 +92,20 @@ fun CalendarScreen(){
     var currentYear by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
     var selectedDate by remember { mutableStateOf(0) }
 
+    val calendarInputs = mutableListOf<CalendarInput>()
+    for (i in 1..getDaysInMonth(currentMonth, currentYear)) {
+        val date = "${currentYear}-${currentMonth + 1}-$i"
+        Log.d("develop", "qwerDate: $date")
+        val tasksForDay = dbTasks.filter { it.date == date }
+        calendarInputs.add(CalendarInput(i, tasksForDay))
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackGroundColor),
+            .background(backgroundColor),
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -114,13 +128,15 @@ fun CalendarScreen(){
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "${if(selectedDate!=0){selectedDate.toString()} else {
-                        " "
-                    }
-                    } " +
-                            "${getMonthName(currentMonth)} $currentYear",
+                    text = "${
+                        if (selectedDate != 0) {
+                            selectedDate.toString()
+                        } else {
+                            ""
+                        }
+                    } " + "${getMonthName(currentMonth)} $currentYear",
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
+                    color = textColor,
                     fontSize = 25.sp
                 )
 
@@ -142,7 +158,7 @@ fun CalendarScreen(){
         val daysInMonth = getDaysInMonth(currentMonth, currentYear)
         Calendar(
             calendarInput = calendarInputs.take(daysInMonth),
-            onDayClick = { day->
+            onDayClick = { day ->
                 clickedCalendarElem = calendarInputs.first { it.day == day }
                 selectedDate = day
             },
@@ -158,24 +174,39 @@ fun CalendarScreen(){
                 .padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
 
-        ){
+        ) {
             for (calendarInput in calendarInputs) {
                 val isSelectedDay = selectedDate == calendarInput.day
                 if (isSelectedDay) {
-
+                    Log.d("develop", "day: ${calendarInput.tasks}")
                     Text(
                         text = "День ${calendarInput.day}",
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.White
+                        color = textColor
                     )
+
+//                    taskViewModel.getTasksForDate()
+
                     if (calendarInput.tasks.isNotEmpty()) {
-                        for (taskEntry in calendarInput.tasks) {
-                            Text(text = taskEntry.taskTitle)
-                            Text(text = taskEntry.taskDesc)
+                        LazyColumn(modifier = Modifier.padding(bottom = 56.dp)) {
+                            items(items = calendarInput.tasks) {
+                                ItemView(
+                                    item = it,
+                                    onClick = { task ->
+                                        val taskId = task.id ?: -1
+                                        navController.navigate(
+                                            route = "screen_editTask/$taskId",
+                                            builder = {
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            })
+                                    }
+                                )
+                            }
                         }
                     } else {
-                        Text(text = "Нет задач на сегодня", color = Color.White)
+                        Text(text = "Нет задач на сегодня", color = textColor)
                     }
                 }
             }
@@ -183,10 +214,34 @@ fun CalendarScreen(){
     }
 }
 
-
-
-
-
+@Composable
+fun ItemView(item: TaskDb, onClick: (TaskDb) -> Unit) {
+    Column(
+        modifier = Modifier
+            .clickable {
+                onClick.invoke(item)
+            }
+            .fillMaxWidth()
+            .padding(12.dp)
+            .background(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
+            .padding(16.dp)
+    ) {
+        Text(
+            text = item.taskTitle,
+            style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 16.sp),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
+            text = if (item.taskDesc.isNotEmpty()) "Описание: ${item.taskDesc}" else "Нет описания задачи",
+            style = TextStyle(fontSize = 14.sp),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
+            text = "Повтор: ${item.repeatOption.title}",
+            style = TextStyle(fontSize = 14.sp)
+        )
+    }
+}
 
 
 private const val CALENDAR_ROWS = 5
@@ -196,8 +251,8 @@ private const val CALENDAR_COLUMNS = 7
 fun Calendar(
     modifier: Modifier = Modifier,
     calendarInput: List<CalendarInput>,
-    onDayClick:(Int)->Unit,
-    strokeWidth:Float = 15f,
+    onDayClick: (Int) -> Unit,
+    strokeWidth: Float = 15f,
     //month:String
 ) {
 
@@ -241,25 +296,25 @@ fun Calendar(
                         }
                     )
                 }
-        ){
+        ) {
             val canvasHeight = size.height
             val canvasWidth = size.width
-            canvasSize = Size(canvasWidth,canvasHeight)
-            val ySteps = canvasHeight/ CALENDAR_ROWS
-            val xSteps = canvasWidth/ CALENDAR_COLUMNS
+            canvasSize = Size(canvasWidth, canvasHeight)
+            val ySteps = canvasHeight / CALENDAR_ROWS
+            val xSteps = canvasWidth / CALENDAR_COLUMNS
 
             val column = (clickAnimationOffset.x / canvasSize.width * CALENDAR_COLUMNS).toInt() + 1
             val row = (clickAnimationOffset.y / canvasSize.height * CALENDAR_ROWS).toInt() + 1
 
             val path = Path().apply {
-                moveTo((column-1)*xSteps,(row-1)*ySteps)
-                lineTo(column*xSteps,(row-1)*ySteps)
-                lineTo(column*xSteps,row*ySteps)
-                lineTo((column-1)*xSteps,row*ySteps)
+                moveTo((column - 1) * xSteps, (row - 1) * ySteps)
+                lineTo(column * xSteps, (row - 1) * ySteps)
+                lineTo(column * xSteps, row * ySteps)
+                lineTo((column - 1) * xSteps, row * ySteps)
                 close()
             }
 
-            clipPath(path){
+            clipPath(path) {
                 drawCircle(
                     brush = Brush.radialGradient(
                         listOf(GreenSoft.copy(0.8f), GreenSoft.copy(0.2f)),
@@ -273,40 +328,40 @@ fun Calendar(
 
             drawRoundRect(
                 GreenSoft,
-                cornerRadius = CornerRadius(25f,25f),
+                cornerRadius = CornerRadius(25f, 25f),
                 style = Stroke(
                     width = strokeWidth
                 )
             )
 
-            for(i in 1 until CALENDAR_ROWS){
+            for (i in 1 until CALENDAR_ROWS) {
                 drawLine(
                     color = GreenSoft,
-                    start = Offset(0f,ySteps*i),
-                    end = Offset(canvasWidth, ySteps*i),
+                    start = Offset(0f, ySteps * i),
+                    end = Offset(canvasWidth, ySteps * i),
                     strokeWidth = strokeWidth
                 )
             }
-            for(i in 1 until CALENDAR_COLUMNS){
+            for (i in 1 until CALENDAR_COLUMNS) {
                 drawLine(
                     color = GreenSoft,
-                    start = Offset(xSteps*i,0f),
-                    end = Offset(xSteps*i, canvasHeight),
+                    start = Offset(xSteps * i, 0f),
+                    end = Offset(xSteps * i, canvasHeight),
                     strokeWidth = strokeWidth
                 )
             }
-            val textHeight = 17.dp.toPx()
-            for(i in calendarInput.indices){
-                val textPositionX = xSteps * (i% CALENDAR_COLUMNS) + strokeWidth
-                val textPositionY = (i / CALENDAR_COLUMNS) * ySteps + textHeight + strokeWidth/2
+            val textHeight = 16.dp.toPx()
+            for (i in calendarInput.indices) {
+                val textPositionX = xSteps * (i % CALENDAR_COLUMNS) + strokeWidth
+                val textPositionY = (i / CALENDAR_COLUMNS) * ySteps + textHeight + strokeWidth / 2
                 drawContext.canvas.nativeCanvas.apply {
                     drawText(
-                        "${i+1}",
+                        "${i + 1}",
                         textPositionX,
                         textPositionY,
                         Paint().apply {
                             textSize = textHeight
-                            color = Color.White.toArgb()
+                            color = Color.Green.toArgb()
                             isFakeBoldText = true
                         }
                     )
@@ -323,11 +378,13 @@ private fun getMonthName(month: Int): String {
     calendar.set(Calendar.MONTH, month)
     return calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault())
 }
+
 private fun getDaysInMonth(month: Int, year: Int): Int {
     val calendar = Calendar.getInstance()
     calendar.set(Calendar.YEAR, year)
     calendar.set(Calendar.MONTH, month)
     return calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
 }
+
 data class TaskEntry(val title: String, val description: String)
 data class CalendarInput(val day: Int, val tasks: List<TaskDb>)

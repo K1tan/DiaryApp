@@ -3,35 +3,33 @@ package com.example.diaryapp.screens
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.hardware.camera2.params.BlackLevelPattern
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
@@ -63,18 +62,19 @@ import com.example.diaryapp.ContextProvider
 import com.example.diaryapp.R
 import com.example.diaryapp.TaskStructure
 import com.example.diaryapp.TaskViewModel
-import com.example.diaryapp.database.TaskDb
 import com.example.diaryapp.ui.theme.BackGroundColor
+import com.example.diaryapp.ui.theme.BackGroundColorLight
 import com.example.diaryapp.ui.theme.CardBackGroundColor
+import com.example.diaryapp.ui.theme.CardBackGroundColorLight
 import com.example.diaryapp.ui.theme.GreenSoft
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.example.diaryapp.ui.theme.TextColorDark
+import com.example.diaryapp.ui.theme.TextColorLight
+import com.pixplicity.easyprefs.library.Prefs
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,6 +84,10 @@ fun EditTaskScreen(
     taskStructure: TaskStructure,
     taskId: Int?
 ) {
+    val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
+    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+    val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
+
     var showConfirmationDialog by remember { mutableStateOf(false) }
     val taskViewModel: TaskViewModel = viewModel()
     val dbTask by taskViewModel.task.collectAsState()
@@ -121,17 +125,23 @@ fun EditTaskScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackGroundColor)
-            .verticalScroll(ScrollState(0))
-            .padding(bottom = 70.dp)
-    ) {
+            .background(backgroundColor)
+            .verticalScroll(rememberScrollState())
+            .fillMaxHeight()
+            .padding(end = 16.dp, start = 16.dp, bottom = 64.dp),
+
+        ) {
         Row(
             modifier = Modifier
-                .background(BackGroundColor)
+                .background(backgroundColor)
                 .fillMaxWidth()
-                .padding(top = 15.dp), horizontalArrangement = Arrangement.SpaceBetween
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+
+
         ) {
-            Box(modifier = Modifier.padding(start = 20.dp)) {
+            Box() {
                 TextField(
                     value = taskStructure.taskTitle, onValueChange = {
                         taskStructure.taskTitle = it
@@ -142,7 +152,7 @@ fun EditTaskScreen(
                         )
                     }, modifier = Modifier
                         .fillMaxWidth(0.8f)
-                        .background(CardBackGroundColor),
+                        .background(cardBackground),
                     shape = RoundedCornerShape(7.dp),
                     colors = TextFieldDefaults.textFieldColors(
                         textColor = Color.White,
@@ -151,8 +161,11 @@ fun EditTaskScreen(
                 )
             }
             Image(
-                painterResource(id = R.drawable.ic_submit), modifier = Modifier
-                    .size(64.dp)
+                painterResource(
+                    id = R.drawable.ic_submit),
+
+                modifier = Modifier
+                    .size(48.dp)
                     .fillMaxWidth(0.2f)
                     .clickable {
 
@@ -204,7 +217,7 @@ fun EditTaskScreen(
                     }, contentDescription = "submitImage"
             )
         }
-        Card(modifier = Modifier.padding(10.dp), shape = RoundedCornerShape(20.dp)) {
+        Card(shape = RoundedCornerShape(8.dp)) {
             TextField(
                 value = taskStructure.taskDesc, onValueChange = {
                     taskStructure.taskDesc = it
@@ -216,8 +229,8 @@ fun EditTaskScreen(
                 }, modifier = Modifier
                     .fillMaxWidth(1f)
                     .defaultMinSize(minHeight = 50.dp)
-                    .background(CardBackGroundColor)
-                    .padding(15.dp),
+                    .background(cardBackground)
+                    .padding(8.dp),
 
 
                 colors = TextFieldDefaults.textFieldColors(
@@ -227,9 +240,9 @@ fun EditTaskScreen(
             )
         }
 
-        Column() {
+        Column {
             checkboxes.forEachIndexed { index, isChecked ->
-                Log.d("MyTag","in foreach ${checkboxesText[index]}")
+                Log.d("MyTag", "in foreach ${checkboxesText[index]}")
                 Row(
                     modifier = Modifier
                         .padding(horizontal = 5.dp, vertical = 3.dp)
@@ -264,7 +277,7 @@ fun EditTaskScreen(
                             .padding(5.dp),
                         colors = TextFieldDefaults.textFieldColors(
                             textColor = Color.White,
-                            containerColor = CardBackGroundColor
+                            containerColor = cardBackground
                         )
                     )
                 }
@@ -272,7 +285,8 @@ fun EditTaskScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
                 Button(
                     colors = ButtonDefaults.buttonColors(GreenSoft),
@@ -288,19 +302,19 @@ fun EditTaskScreen(
         }
         Card(
             modifier = Modifier.padding(10.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackGroundColor)
+            colors = CardDefaults.cardColors(containerColor = cardBackground)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp, 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .padding(8.dp, 8.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Повтор: ${taskStructure.taskRepeatOption.title}",
-                    fontSize = 17.sp,
-                    color = Color.White
+                    fontSize = 16.sp,
+                    color = textColor
                 )
                 Box(modifier = Modifier.padding(start = 20.dp)) {
                     DropdownMenu(
@@ -324,8 +338,8 @@ fun EditTaskScreen(
                                     Text(
                                         text = option.title,
                                         color = Color.Black,
-                                        modifier = Modifier.padding(start = 3.dp),
-                                        fontSize = 17.sp
+                                        modifier = Modifier.padding(start = 4.dp),
+                                        fontSize = 16.sp
                                     )
                                 }
                             }, onClick = {
@@ -336,7 +350,7 @@ fun EditTaskScreen(
                     }
                     Button(
                         colors = ButtonDefaults.buttonColors(GreenSoft),
-                        onClick = { repeatMenuExpanded = !repeatMenuExpanded }
+                        onClick = { repeatMenuExpanded = !repeatMenuExpanded },
                     ) {
                         Text(
                             text = "Изменить",
@@ -348,12 +362,17 @@ fun EditTaskScreen(
         }
 
         Card(
-            modifier = Modifier.padding(10.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackGroundColor)
+            modifier = Modifier.padding(8.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBackground)
         ) {
             val context = LocalContext.current
+            val currentTime = Calendar.getInstance()
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+            val time = remember {
+                mutableStateOf("${timeFormat.format(taskStructure.taskTime.time.time)}")
+            }
             val timePickerDialog = remember {
-                val currentTime = Calendar.getInstance()
                 TimePickerDialog(
                     context,
                     { _, hourOfDay, minute ->
@@ -361,22 +380,25 @@ fun EditTaskScreen(
                             set(Calendar.HOUR_OF_DAY, hourOfDay)
                             set(Calendar.MINUTE, minute)
                         }
+                        Log.d("develop", "pick: ${hourOfDay}, $minute")
+                        time.value = "$hourOfDay:$minute"
                     },
                     currentTime.get(Calendar.HOUR_OF_DAY),
                     currentTime.get(Calendar.MINUTE),
+
                     true
                 )
             }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp, 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .padding(8.dp, 8.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                val formattedTime = timeFormat.format(taskStructure.taskTime.time.time)
-                Text(text = "Напоминание: ${formattedTime}", fontSize = 17.sp, color = Color.White)
+                Log.d("develop", "ts: ${taskStructure.taskTime.time.time}")
+                val formattedTime =
+                Text(text = "Напоминание: ${time.value}", fontSize = 16.sp, color = textColor)
                 Button(
                     colors = ButtonDefaults.buttonColors(GreenSoft),
                     onClick = {
@@ -392,7 +414,7 @@ fun EditTaskScreen(
             val context = LocalContext.current
 
             val calendar = Calendar.getInstance()
-            calendar.time = taskStructure.taskDate
+//            calendar.time = taskStructure.taskDate
 
             val nowDay: Int = calendar.get(Calendar.DAY_OF_MONTH)
             val nowMonth: Int = calendar.get(Calendar.MONTH)
@@ -404,9 +426,9 @@ fun EditTaskScreen(
                 val dialog = DatePickerDialog(
                     context,
                     DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-                        date.value = "$dayOfMonth/${month + 1}/$year"
+                        date.value = "$year-${month + 1}-$dayOfMonth"
                         calendar.set(year, month, dayOfMonth)
-                        taskStructure.taskDate = calendar.time
+                        taskStructure.taskDate = date.value
                     },
                     nowYear,
                     nowMonth,
@@ -418,33 +440,32 @@ fun EditTaskScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
+                    .padding(8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = CardBackGroundColor,
+                    containerColor = cardBackground,
                     contentColor = Color.White
                 ),
-               // shape = RoundedCornerShape(20.dp)
+                // shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp, 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(8.dp, 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text(text = "Выбранная дата: ${date.value}", fontSize = 17.sp)
+                    Text(text = "Дата: ${date.value}", fontSize = 16.sp)
                     Button(
                         colors = ButtonDefaults.buttonColors(GreenSoft),
                         onClick = {
                             datePickerDialog.show()
-
-
-                        }) {
+                        }
+                    ) {
                         Text(text = "Изменить", color = Color.Black)
                     }
                 }
             }
-            Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.Center) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 if (showConfirmationDialog) {
                     AlertDialog(
                         modifier = Modifier.background(Color.Transparent),
@@ -452,13 +473,13 @@ fun EditTaskScreen(
                         title = {
                             Text(
                                 text = "Подтвердите действие",
-                                color = Color.White
+                                color = textColor
                             )
                         },
                         text = {
                             Text(
                                 text = "Вы уверены, что хотите безвозвратно удалить задачу?",
-                                color = Color.White
+                                color = textColor
                             )
                         },
                         confirmButton = {
@@ -494,15 +515,15 @@ fun EditTaskScreen(
                                 Text(text = "Отмена", color = Color.Black)
                             }
                         },
-                        backgroundColor = CardBackGroundColor,
+                        backgroundColor = cardBackground,
                         shape = RoundedCornerShape(10.dp)
                     )
                 }
                 Button(
-                    onClick = { showConfirmationDialog = true},
+                    onClick = { showConfirmationDialog = true },
                     colors = ButtonDefaults.buttonColors(Color.Red)
                 ) {
-                    Text(text = "Удалить", color = Color.White)
+                    Text(text = "Удалить", color = textColor)
                 }
             }
 
@@ -511,5 +532,14 @@ fun EditTaskScreen(
 
 
     }
+}
 
+@Preview
+@Composable
+fun MyViewPreview() {
+    EditTaskScreen(
+        navController = NavHostController(LocalContext.current),
+        taskStructure = TaskStructure(),
+        taskId = 1
+    )
 }

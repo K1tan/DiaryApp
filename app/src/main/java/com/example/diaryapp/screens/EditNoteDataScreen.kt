@@ -33,7 +33,12 @@ import com.example.diaryapp.NoteStructure
 import com.example.diaryapp.NoteViewModel
 import com.example.diaryapp.R
 import com.example.diaryapp.ui.theme.BackGroundColor
+import com.example.diaryapp.ui.theme.BackGroundColorLight
 import com.example.diaryapp.ui.theme.CardBackGroundColor
+import com.example.diaryapp.ui.theme.CardBackGroundColorLight
+import com.example.diaryapp.ui.theme.TextColorDark
+import com.example.diaryapp.ui.theme.TextColorLight
+import com.pixplicity.easyprefs.library.Prefs
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,6 +50,9 @@ fun EditNoteDataScreen(
 ) {
     val noteViewModel: NoteViewModel = viewModel()
     val dbNote by noteViewModel.note.collectAsState()
+    val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
+    val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
+    val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
 
     LaunchedEffect(Unit) {
         if (noteId != null) {
@@ -58,10 +66,10 @@ fun EditNoteDataScreen(
             noteStructure.noteText = note.noteText
         }
     }
-    Column() {
+    Column {
         Row(
             modifier = Modifier
-                .background(BackGroundColor)
+                .background(backgroundColor)
                 .fillMaxWidth()
                 .padding(top = 15.dp), horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -76,7 +84,7 @@ fun EditNoteDataScreen(
                         )
                     }, modifier = Modifier
                         .fillMaxWidth(0.7f)
-                        .background(CardBackGroundColor),
+                        .background(cardBackground),
                     shape = RoundedCornerShape(7.dp),
                     colors = TextFieldDefaults.textFieldColors(textColor = Color.White)
                 )
@@ -130,7 +138,7 @@ fun EditNoteDataScreen(
             }, modifier = Modifier
                 .fillMaxWidth(1f)
                 .fillMaxHeight()
-                .background(CardBackGroundColor)
+                .background(cardBackground)
                 .padding(15.dp),
 
             colors = TextFieldDefaults.textFieldColors(textColor = Color.White)

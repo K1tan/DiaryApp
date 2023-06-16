@@ -11,6 +11,7 @@ class NoteStructure {
     var noteText: String by mutableStateOf("")
     var noteDate: Date by mutableStateOf(Date())
     var noteMood: Int by mutableStateOf(R.drawable.ic_normal)
+    var notePhoto: String by mutableStateOf("")
     var selectedActivities by mutableStateOf(emptyList<ActivitiesDb>())
 }
 

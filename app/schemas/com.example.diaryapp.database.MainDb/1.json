@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "49b2d591820901f9045825d946a02bc5",
+    "identityHash": "0bd6cf6f11e1bfc3d11cf5a4d3de5aa4",
     "entities": [
       {
         "tableName": "notes",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `noteTitle` TEXT NOT NULL, `noteText` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `noteTitle` TEXT NOT NULL, `noteText` TEXT NOT NULL, `noteMood` INTEGER NOT NULL, `noteDate` INTEGER NOT NULL, `notePhoto` TEXT, `activityIds` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -25,6 +25,30 @@
             "columnName": "noteText",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "noteMood",
+            "columnName": "noteMood",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "noteDate",
+            "columnName": "noteDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "photoUrl",
+            "columnName": "notePhoto",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "activityIds",
+            "columnName": "activityIds",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -38,7 +62,7 @@
       },
       {
         "tableName": "tasks",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `taskTitle` TEXT NOT NULL, `taskDesc` TEXT NOT NULL, `taskDate` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `taskTitle` TEXT NOT NULL, `taskDesc` TEXT NOT NULL, `taskDate` TEXT NOT NULL, `taskTime` INTEGER NOT NULL, `taskRepeatOption` TEXT NOT NULL, `checkboxes` TEXT NOT NULL, `checkboxesText` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -61,7 +85,57 @@
           {
             "fieldPath": "date",
             "columnName": "taskDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "taskTime",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repeatOption",
+            "columnName": "taskRepeatOption",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checkboxes",
+            "columnName": "checkboxes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checkboxesText",
+            "columnName": "checkboxesText",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "activities",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -78,7 +152,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '49b2d591820901f9045825d946a02bc5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0bd6cf6f11e1bfc3d11cf5a4d3de5aa4')"
     ]
   }
 }

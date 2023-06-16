@@ -3,14 +3,15 @@ package com.example.diaryapp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diaryapp.database.MainDb
-import com.example.diaryapp.database.NoteDb
 import com.example.diaryapp.database.TaskDb
 import com.example.diaryapp.screens.db
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Date
 
 class TaskViewModel : ViewModel() {
     private val _tasks = MutableStateFlow(emptyList<TaskDb>())
@@ -21,6 +22,7 @@ class TaskViewModel : ViewModel() {
 
     private val _task = MutableStateFlow<TaskDb?>(null)
     val task: StateFlow<TaskDb?> = _task
+
     fun getAllTasks(db: MainDb) {
         viewModelScope.launch(Dispatchers.IO) {
             val tasks = db.getDao().getAllTasks()
@@ -28,16 +30,18 @@ class TaskViewModel : ViewModel() {
             _filteredTasks.value = tasks
         }
     }
-    fun searchTasks(searchQuery: String){
+
+    fun searchTasks(searchQuery: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val tasks = if (searchQuery.isNotBlank()) {
                 db.getDao().searchTasksByText(searchQuery)
             } else {
                 db.getDao().getAllTasks()
             }
-            _filteredTasks.value=tasks
+            _filteredTasks.value = tasks
         }
     }
+
     fun getTaskById(db: MainDb, taskId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val task = db.getDao().getTaskById(taskId)
@@ -45,11 +49,13 @@ class TaskViewModel : ViewModel() {
             _task.emit(task)
         }
     }
+
     suspend fun updateTask(db: MainDb, task: TaskDb) {
         withContext(Dispatchers.IO) {
             db.getDao().updateTask(task)
         }
     }
+
     fun deleteTaskById(db: MainDb, id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             db.getDao().deleteByTaskId(id)
@@ -57,4 +63,12 @@ class TaskViewModel : ViewModel() {
             _tasks.value = updatedNotes
         }
     }
+
+    fun getTasksForDate(date: Date) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _filteredTasks.value = db.getDao().getTasksForToday(date)
+        }
+    }
+
+
 }

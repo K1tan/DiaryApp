@@ -10,26 +10,28 @@ import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.diaryapp.other.Constants
 
-@Database(entities = [NoteDb::class, TaskDb::class, ActivitiesDb::class], version = 3)
+@Database(entities = [NoteDb::class, TaskDb::class, ActivitiesDb::class], version = 1 )
 @TypeConverters(DateConverter::class, Converters::class)
-abstract class MainDb:RoomDatabase() {
+abstract class MainDb : RoomDatabase() {
     abstract fun getDao(): Dao
-    companion object{
+
+    companion object {
         fun getDb(context: Context): MainDb {
             return Room.databaseBuilder(
                 context.applicationContext,
                 MainDb::class.java,
                 "test.db"
             )
-                .addCallback(object :RoomDatabase.Callback(){
+                .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
                         insertDefaultActivities(db)
                     }
                 })
                 .build()
-                //.fallbackToDestructiveMigration() - удалит имеющиеся данные
+            //.fallbackToDestructiveMigration() - удалит имеющиеся данные
         }
+
         private fun insertDefaultActivities(db: SupportSQLiteDatabase) {
             val defaultActivities = Constants.DEFAULT_ACTIVITIES
 

@@ -15,11 +15,11 @@ import java.util.Date
 class TaskStructure {
     var taskTitle: String by mutableStateOf("")
     var taskDesc: String by mutableStateOf("")
-    var taskDate: Date by mutableStateOf(Date())
+    var taskDate: String by mutableStateOf("")
     var taskTime: Calendar by mutableStateOf(Calendar.getInstance())
     var taskRepeatOption: RepeatOption by mutableStateOf(RepeatOption.NEVER)
-    var checkboxes:MutableList<Boolean> = mutableStateListOf()
-    var checkboxesText:MutableList<String> = mutableStateListOf()
+    var checkboxes: MutableList<Boolean> = mutableStateListOf()
+    var checkboxesText: MutableList<String> = mutableStateListOf()
 }
 
 
