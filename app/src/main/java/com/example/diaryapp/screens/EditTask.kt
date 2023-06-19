@@ -278,7 +278,7 @@ fun EditTaskScreen(
                             .background(Color.Transparent)
                             .padding(5.dp),
                         colors = TextFieldDefaults.textFieldColors(
-                            textColor = Color.White,
+                            textColor = textColor,
                             containerColor = cardBackground
                         )
                     )

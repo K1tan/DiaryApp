@@ -54,6 +54,7 @@ fun EditNoteDataScreen(
     val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
     val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
 
+
     LaunchedEffect(Unit) {
         if (noteId != null) {
             noteViewModel.getNoteById(db, noteId)
@@ -86,7 +87,7 @@ fun EditNoteDataScreen(
                         .fillMaxWidth(0.7f)
                         .background(cardBackground),
                     shape = RoundedCornerShape(7.dp),
-                    colors = TextFieldDefaults.textFieldColors(textColor = Color.White)
+                    colors = TextFieldDefaults.textFieldColors(textColor = textColor, containerColor = cardBackground)
                 )
 
             }
@@ -141,7 +142,7 @@ fun EditNoteDataScreen(
                 .background(cardBackground)
                 .padding(15.dp),
 
-            colors = TextFieldDefaults.textFieldColors(textColor = Color.White)
+            colors = TextFieldDefaults.textFieldColors(textColor = textColor, containerColor = cardBackground)
         )
 
     }

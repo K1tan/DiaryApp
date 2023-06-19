@@ -126,7 +126,7 @@ fun DiaryScreen(navController: NavHostController) {
             }
 
             TextField(
-                colors = TextFieldDefaults.textFieldColors(cardBackground),
+                colors = TextFieldDefaults.textFieldColors(textColor=textColor,containerColor = cardBackground),
                 value = searchQuery,
                 onValueChange = {
                     searchQuery = it

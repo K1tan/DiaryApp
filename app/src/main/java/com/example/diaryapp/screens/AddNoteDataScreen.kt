@@ -63,7 +63,7 @@ fun AddNoteDataScreen(navController: NavHostController, noteStructure: NoteStruc
                         .fillMaxWidth(0.7f)
                         .background(backgroundColor),
                     shape = RoundedCornerShape(7.dp),
-                    colors = TextFieldDefaults.textFieldColors(textColor = textColor)
+                    colors = TextFieldDefaults.textFieldColors(textColor=textColor,containerColor = cardBackground)
                 )
 
             }
@@ -96,7 +96,7 @@ fun AddNoteDataScreen(navController: NavHostController, noteStructure: NoteStruc
                 .background(cardBackground)
                 .padding(15.dp),
 
-            colors = TextFieldDefaults.textFieldColors(textColor = textColor)
+            colors = TextFieldDefaults.textFieldColors(textColor=textColor,containerColor = cardBackground)
         )
 
     }

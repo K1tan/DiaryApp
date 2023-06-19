@@ -1,14 +1,17 @@
 package com.example.diaryapp.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Switch
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -48,7 +51,7 @@ fun SettingsScreen(
             modifier = Modifier.padding(bottom = 16.dp),
             color = textColor
         )
-
+        Divider()
         // Выбор темы
         Text(
             text = "Тема",
@@ -70,7 +73,7 @@ fun SettingsScreen(
             )
             Text(text = "Тёмная тема", color = textColor)
         }
-
+        Divider()
         // Напоминания
         Text(
             text = "Напоминания",
@@ -94,7 +97,7 @@ fun SettingsScreen(
                 text = "Включить напоминания", color = textColor
             )
         }
-
+        Divider()
         // Уведомления от задач
         Text(
             text = "Уведомления от задач",
@@ -118,19 +121,25 @@ fun SettingsScreen(
                 text = "Включить уведомления от задач", color = textColor
             )
         }
-
+        Divider()
         // Добавить занятие
-        Button(
-            onClick = {
-                navController.navigate("screen_addActivity") {
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            modifier = Modifier.padding(bottom = 16.dp),
-            colors = ButtonDefaults.buttonColors(GreenSoft)
-        ) {
-            Text(text = "Добавить занятие", color = Color.Black)
+        Row(modifier = Modifier.padding(end = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(text = "Добавить занятие",
+                style = MaterialTheme.typography.subtitle1,
+                modifier = Modifier.padding(bottom = 8.dp),
+                color = textColor)
+            Button(
+                onClick = {
+                    navController.navigate("screen_addActivity") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                modifier = Modifier.padding(bottom = 16.dp),
+                colors = ButtonDefaults.buttonColors(GreenSoft)
+            ) {
+                Text(text = "Добавить", color = Color.Black)
+            }
         }
     }
 }

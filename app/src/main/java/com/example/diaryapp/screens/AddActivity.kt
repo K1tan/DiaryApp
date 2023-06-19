@@ -18,6 +18,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -66,8 +67,8 @@ fun AddActivity(navController: NavHostController) {
 
     val textColor = if (Prefs.getBoolean("darkTheme", false)) TextColorDark else TextColorLight
     val backgroundColor = if (Prefs.getBoolean("darkTheme", false)) BackGroundColor else BackGroundColorLight
-    val cardBackground = if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
-
+    val cardBackground =
+        if (Prefs.getBoolean("darkTheme", false)) CardBackGroundColor else CardBackGroundColorLight
     LaunchedEffect(Unit) {
         noteViewModel.getAllNotes(db)
     }
@@ -100,13 +101,13 @@ fun AddActivity(navController: NavHostController) {
                     },
                     label = {
                         Text(
-                            text = "Добавить занятие",
+                            text = "Добавить занятие", color = textColor
                         )
                     }, modifier = Modifier
                         .fillMaxWidth(0.8f)
                         .background(cardBackground),
                     shape = RoundedCornerShape(7.dp),
-                    colors = TextFieldDefaults.textFieldColors(textColor = textColor)
+                    colors = TextFieldDefaults.textFieldColors(textColor = textColor, containerColor = cardBackground)
                 )
             }
             Image(
@@ -152,13 +153,13 @@ fun AddActivity(navController: NavHostController) {
                                 title = {
                                     Text(
                                         text = "Удалить занятие?",
-                                        color = Color.White
+                                        color = textColor
                                     )
                                 },
                                 text = {
                                     Text(
                                         text = "Вы уверены, что хотите безвозвратно удалить занятие? Оно также удалится со всех ваших записей.",
-                                        color = Color.White
+                                        color = textColor
                                     )
                                 },
                                 confirmButton = {
@@ -189,7 +190,9 @@ fun AddActivity(navController: NavHostController) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(containerColor = cardBackground)
+
                         ) {
                             Row(
                                 modifier = Modifier
@@ -200,7 +203,7 @@ fun AddActivity(navController: NavHostController) {
                             ) {
                                 Text(
                                     text = activities[index].name,
-                                    color = Color.White,
+                                    color = textColor,
                                     fontSize = 20.sp
                                 )
                                 IconButton(onClick = {
