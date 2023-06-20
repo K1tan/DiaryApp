@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">DiaryApp</string>
+    <string name="app_name">Ежедневник</string>
     <string name="title_activity_add_note">AddNoteActivity</string>
 </resources>
