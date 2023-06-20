@@ -1,5 +1,6 @@
 package com.example.diaryapp
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diaryapp.database.ActivitiesDb
@@ -77,6 +78,7 @@ class NoteViewModel : ViewModel() {
             db.getDao().deleteById(id)
             val updatedNotes = _notes.value.filter { it.id != id }
             _notes.value = updatedNotes
+            _filteredNotes.value = updatedNotes
         }
     }
 
